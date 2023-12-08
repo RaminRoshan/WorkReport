@@ -19,146 +19,186 @@
             </div>
         </div>
     </nav>
+    <br>
+    <div class="row">
+        <div class="col-6 col-md-3 col-lg-3 mb-2">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="avatar mx-auto mb-2">
+                        <span class="avatar-initial rounded-circle bg-label-success"><i class="bx bx-hard-hat fs-4"></i></span>
+                    </div>
+                    <span class="d-block text-nowrap pt-1">فعالیت</span>
+                    <h2 class="mb-n3">{{ userCount }}</h2>
+                    <hr>
+                    <h2 class="mb-n3">{{ allCount }}</h2>
+                </div>
+            </div>
+        </div>
+  
+        <div class="col-6 col-md-3 col-lg-3 mb-2">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="avatar mx-auto mb-2">
+                        <span class="avatar-initial rounded-circle bg-label-success"><i class="fa fa-percent fs-4"></i></span>
+                    </div>
+                    <span class="d-block text-nowrap pt-1">درصد فعالیت / امتیاز</span>
+                    <h2 class="mb-n3">{{ projectPercent }}</h2>
+                    <hr>
+                    <h2 class="mb-n3">{{ totalScore }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-2 col-lg-2 mb-2" v-if="Documentation || Documentation>0">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="avatar mx-auto mb-2">
+                        <span class="avatar-initial rounded-circle bg-label-success"><i class="bx bx-file fs-4"></i></span>
+                    </div>
+                    <span class="d-block text-nowrap pt-1">مستندسازی</span>
+                    <h2 class="mb-n3">{{ Documentation }}</h2>
+                    <hr>
+                    <h2 class="mb-n3"></h2>
+                </div>
+            </div>
+        </div>        
+      
+        <div class="col-6 col-md-2 col-lg-2 mb-2" v-if="writeBulltan || writeBulltan>0">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="avatar mx-auto mb-2">
+                        <span class="avatar-initial rounded-circle bg-label-success"><i class="fa fa-bars fs-4"></i></span>
+                    </div>
+                    <span class="d-block text-nowrap pt-1">ارسال خبرنامه</span>
+                    <h2 class="mb-n3">{{ writeBulltan }}</h2>
+                    <hr>
+                    <h2 class="mb-n3"></h2>
+                </div>
+            </div>
+        </div> 
+
+        <div class="col-6 col-md-2 col-lg-2 mb-2" v-if="sendNews || sendNews>0">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="avatar mx-auto mb-2">
+                        <span class="avatar-initial rounded-circle bg-label-success"><i class="fa fa-envelope fs-4"></i></span>
+                    </div>
+                    <span class="d-block text-nowrap pt-1">ارسال خبر</span>
+                    <h2 class="mb-n3">{{ sendNews }}</h2>
+                    <hr>
+                    <h2 class="mb-n3"></h2>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-6 col-md-2 col-lg-2 mb-2" v-if="sendNewspaper || sendNewspaper>0">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="avatar mx-auto mb-2">
+                        <span class="avatar-initial rounded-circle bg-label-success"><i class="fa fa-newspaper fs-4"></i></span>
+                    </div>
+                    <span class="d-block text-nowrap pt-1">ارسال بصر</span>
+                    <h2 class="mb-n3">{{ sendNewspaper }}</h2>
+                    <hr>
+                    <h2 class="mb-n3"></h2>
+                </div>
+            </div>
+        </div>
+  
+        <div class="col-6 col-md-2 col-lg-2 mb-2" v-if="programDevelop || programDevelop>0">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="avatar mx-auto mb-2">
+                        <span class="avatar-initial rounded-circle bg-label-success"><i class="fa fa-keyboard fs-4"></i></span>
+                    </div>
+                    <span class="d-block text-nowrap pt-1">برنامه نویسی</span>
+                    <h2 class="mb-n3">{{ programDevelop }}</h2>
+                    <hr>
+                    <h2 class="mb-n3"></h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-2 col-lg-2 mb-2" v-if="teaching || teaching>0">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="avatar mx-auto mb-2">
+                        <span class="avatar-initial rounded-circle bg-label-success"><i class="fa fa-graduation-cap fs-4"></i></span>
+                    </div>
+                    <span class="d-block text-nowrap pt-1">آموزش</span>
+                    <h2 class="mb-n3">{{ teaching }}</h2>
+                    <hr>
+                    <h2 class="mb-n3"></h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-2 col-lg-2 mb-2" v-if="translate || translate>0">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="avatar mx-auto mb-2">
+                        <span class="avatar-initial rounded-circle bg-label-success"><i class="fa fa-language  fs-4"></i></span>
+                    </div>
+                    <span class="d-block text-nowrap pt-1">ترجمه</span>
+                    <h2 class="mb-n3">{{ translate }}</h2>
+                    <hr>
+                    <h2 class="mb-n3"></h2>
+                </div>
+            </div>
+        </div> 
+  
+        <div class="col-6 col-md-2 col-lg-2 mb-2" v-if="other || other>0">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="avatar mx-auto mb-2">
+                        <span class="avatar-initial rounded-circle bg-label-success"><i class="bx bx-purchase-tag fs-4"></i></span>
+                    </div>
+                    <span class="d-block text-nowrap pt-1">سایر</span>
+                    <h2 class="mb-n3">{{ other }}</h2>
+                    <hr>
+                    <h2 class="mb-n3"></h2>
+                </div>
+            </div>
+        </div> 
+    </div>
     <div class="row">
         <div class="col-sm-12">
-            <div class="tasks-container">
-                <div class="row gutters">
-                    <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 col-6">
-                        <div class="info-tiles">
-                            <div class="info-icon"><i class="fa fa-briefcase"></i></div>
-                            <div class="stats-detail">
-                                <h3>{{ allCount }} / {{ userCount }}</h3>
-                                <p>فعالیت مجموعه / فعالیت شما</p>
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-xl-3 col-lg-3 col-md-3 col-sm-12 col-6">
+                            <div class="form-group">  
+                                <h5>از: </h5> <date-picker v-model="date_start"></date-picker>
                             </div>
-                        </div>
-                    </div>
-
-                    <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 col-6">
-                        <div class="info-tiles">
-                            <div class="info-icon"><i class="fa fa-percent"></i></div>
-                            <div class="stats-detail">
-                                <h3>{{ projectPercent }} / {{ totalScore }}</h3>
-                                <p>درصد فعالیت شما / امتیاز شما</p>
+                        </div> 
+                        <div class="col-xl-3 col-lg-3 col-md-3 col-sm-12 col-6">
+                            <div class="form-group">  
+                                <h5>تا: </h5> <date-picker v-model="date_end"></date-picker>
                             </div>
-                        </div>
-                    </div>  
- 
-                    <div class="col-xl-2 col-lg-4 col-md-6 col-sm-12 col-6">
-                        <div class="info-tiles">
-                            <div class="info-icon"><i class="fa fa-users"></i></div>
-                            <div class="stats-detail">
-                                <h3>{{ findingPeople }}</h3>
-                                <p>سوژه‌یابی</p>
+                        </div>                                                  
+                        <div class="col-xl-3 col-lg-3 col-md-3 col-sm-12 col-6">
+                            <div class="form-group">                    
+                                <h5>پروژه:</h5>
+                                <select class="form-select" aria-label="Default select example" v-model="project_task_search">
+                                    <option value=""></option>
+                                    <option value="سوژه‌یابی">سوژه‌یابی</option>
+                                    <option value="مستندسازی">مستندسازی</option>
+                                    <option value="ارسال خبرنامه">ارسال خبرنامه</option>
+                                    <option value="ارسال خبر">ارسال خبر</option>
+                                    <option value="ارسال بصر">ارسال بصر</option>
+                                    <option value="برنامه نویسی">برنامه نویسی</option>
+                                    <option value="آموزش">آموزش</option>                                                
+                                    <option value="سایر">سایر</option>
+                                </select>  
                             </div>
-                        </div>
-                    </div>  
-                    <div class="col-xl-2 col-lg-4 col-md-6 col-sm-12 col-6">
-                        <div class="info-tiles">
-                            <div class="info-icon"><i class="fa fa-file"></i></div>
-                            <div class="stats-detail">
-                                <h3>{{ Documentation }}</h3>
-                                <p>مستندسازی</p>
+                        </div>                  
+                        <div class="col-xl-2 col-lg-3 col-md-3 col-sm-12 col-6">
+                            <div class="form-group"> 
+                                <h5>ابزار</h5>
+                                <button class="btn btn-info btn-sm" @click="runNewGet()" title="اعمال فیلتر"><i class="fa fa-search"></i></button>
                             </div>
-                        </div>
-                    </div> 
-                    <div class="col-xl-2 col-lg-4 col-md-6 col-sm-12 col-6">
-                        <div class="info-tiles">
-                            <div class="info-icon"><i class="fa fa-file"></i></div>
-                            <div class="stats-detail">
-                                <h3>{{ writeBulltan }}</h3>
-                                <p>ارسال خبرنامه (بولتن)</p>
-                            </div>
-                        </div>
-                    </div>  
-                    <div class="col-xl-2 col-lg-4 col-md-6 col-sm-12 col-6">
-                        <div class="info-tiles">
-                            <div class="info-icon"><i class="fa fa-file"></i></div>
-                            <div class="stats-detail">
-                                <h3>{{ sendNews }}</h3>
-                                <p>ارسال خبر</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-2 col-lg-4 col-md-6 col-sm-12 col-6">
-                        <div class="info-tiles">
-                            <div class="info-icon"><i class="fa fa-file"></i></div>
-                            <div class="stats-detail">
-                                <h3>{{ sendNewspaper }}</h3>
-                                <p>ارسال بصر</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-2 col-lg-4 col-md-6 col-sm-12 col-6">
-                        <div class="info-tiles">
-                            <div class="info-icon"><i class="fa fa-file"></i></div>
-                            <div class="stats-detail">
-                                <h3>{{ programDevelop }}</h3>
-                                <p>برنامه نویسی</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-2 col-lg-4 col-md-6 col-sm-12 col-6">
-                        <div class="info-tiles">
-                            <div class="info-icon"><i class="fa fa-file"></i></div>
-                            <div class="stats-detail">
-                                <h3>{{ teaching }}</h3>
-                                <p>آموزش</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-2 col-lg-4 col-md-6 col-sm-12 col-6">
-                        <div class="info-tiles">
-                            <div class="info-icon"><i class="fa fa-file"></i></div>
-                            <div class="stats-detail">
-                                <h3>{{ translate }}</h3>
-                                <p>ترجمه</p>
-                            </div>
-                        </div>
-                    </div>                    
-                    <div class="col-xl-2 col-lg-4 col-md-6 col-sm-12 col-6">
-                        <div class="info-tiles">
-                            <div class="info-icon"><i class="fa fa-file"></i></div>
-                            <div class="stats-detail">
-                                <h3>{{ other }}</h3>
-                                <p>سایر</p>
-                            </div>
-                        </div>
-                    </div>                                                                                                                                                                                                                         
-                </div>
-                      
-                <div class="tasks-header row">
-                    <div class="col-xl-3 col-lg-3 col-md-3 col-sm-12 col-6">
-                        <div class="form-group">  
-                            <h3>از: </h3> <date-picker v-model="date_start"></date-picker>
-                        </div>
-                    </div> 
-                    <div class="col-xl-3 col-lg-3 col-md-3 col-sm-12 col-6">
-                        <div class="form-group">  
-                            <h3>تا: </h3> <date-picker v-model="date_end"></date-picker>
-                        </div>
-                    </div>                                                  
-                    <div class="col-xl-3 col-lg-3 col-md-3 col-sm-12 col-6">
-                        <div class="form-group">                    
-                            <h3>پروژه:</h3>
-                            <select class="form-select" aria-label="Default select example" v-model="project_task_search">
-                                <option value=""></option>
-                                <option value="سوژه‌یابی">سوژه‌یابی</option>
-                                <option value="مستندسازی">مستندسازی</option>
-                                <option value="ارسال خبرنامه">ارسال خبرنامه (بولتن)</option>
-                                <option value="ارسال خبر">ارسال خبر</option>
-                                <option value="ارسال بصر">ارسال بصر</option>
-                                <option value="برنامه نویسی">برنامه نویسی</option>
-                                <option value="آموزش">آموزش</option>                                                
-                                <option value="سایر">سایر</option>
-                            </select>  
-                        </div>
-                    </div>                  
-                    <div class="col-xl-2 col-lg-3 col-md-3 col-sm-12 col-6">
-                        <div class="form-group"> 
-                            <h3>ابزار</h3>
-                            <button class="btn btn-info btn-sm" @click="runNewGet()" title="اعمال فیلتر"><i class="fa fa-search"></i></button>
-                        </div>
-                    </div>   
+                        </div>  
+                    </div>                         
 				</div>
             </div>
             <hr>
