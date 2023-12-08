@@ -1,5 +1,24 @@
 <template>
-
+    <nav class="navbar navbar-expand-lg bg-white">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="javascript:void(0)"></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-ex-6">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbar-ex-6">
+                <div class="navbar-nav me-auto">
+                </div>
+                <ul class="navbar-nav ms-lg-auto">
+                    <li class="nav-item">
+                        <a class=" btn btn-primary" href="javascript:void(0);" data-bs-toggle="modal" data-toggle="modal" data-bs-target="#addNewTask" data-target="#addNewTask">
+                        <i class="fa fa-plus navbar-icon menu-icon"></i>
+                         افزودن گزارش کار
+                         </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
     <div class="row">
         <div class="col-sm-12">
             <div class="tasks-container">
@@ -91,158 +110,22 @@
                         <div class="info-tiles">
                             <div class="info-icon"><i class="fa fa-file"></i></div>
                             <div class="stats-detail">
+                                <h3>{{ translate }}</h3>
+                                <p>ترجمه</p>
+                            </div>
+                        </div>
+                    </div>                    
+                    <div class="col-xl-2 col-lg-4 col-md-6 col-sm-12 col-6">
+                        <div class="info-tiles">
+                            <div class="info-icon"><i class="fa fa-file"></i></div>
+                            <div class="stats-detail">
                                 <h3>{{ other }}</h3>
                                 <p>سایر</p>
                             </div>
                         </div>
                     </div>                                                                                                                                                                                                                         
                 </div>
-                <div class="modal fade" id="addNewTask" tabindex="-1" role="dialog" aria-labelledby="addNewTaskLabel" aria-hidden="true">
-					<div class="modal-dialog modal-xl" role="document">
-						<div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="addNewTaskLabel">ایجاد گزارش کار</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="date= '';start_time='';end_time='';description='';outcome='';project_task=''">
-                                    <span aria-hidden="true">×</span>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="row">
-                                    <div class="col-sm-12 col-md-6">  
-                                        <div class="form-group">
-                                            <label for="project_task">پروژه <i>*</i></label>
-                                            <select class="form-select" v-model="project_task" aria-label="Default select example">
-                                                <option value="سوژه‌یابی">سوژه‌یابی</option>
-                                                <option value="مستندسازی">مستندسازی</option>
-                                                <option value="ارسال خبرنامه">ارسال خبرنامه (بولتن)</option>
-                                                <option value="ارسال خبر">ارسال خبر</option>
-                                                <option value="ارسال بصر">ارسال بصر</option>
-                                                <option value="برنامه نویسی">برنامه نویسی</option>                                                
-                                                <option value="آموزش">آموزش</option>                                                
-                                                <option value="سایر">سایر</option>
-                                            </select>
-                                        </div>
-                                    </div>                                     
-                                    <div class="col-sm-12 col-md-6">
-                                        <div class="form-group">
-                                            <label for="date">تاریخ <i>*</i></label>
-                                            <date-picker v-model="date"></date-picker>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-12 col-md-6">
-                                        <div class="form-group">
-                                            <label for="start_time">زمان شروع</label>
-                                            <input type="time" class="form-control" id="start_time" v-model="start_time">
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-12 col-md-6">
-                                        <div class="form-group">
-                                            <label for="end_time">زمان پایان</label>
-                                            <input type="time" class="form-control" id="end_time" v-model="end_time" >
-                                        </div>                                                                       
-                                    </div>                                                                       
-                                    <div class="col-sm-12 col-md-12">                                
-                                        <div class="form-group">
-                                            <label for="description">توضیحات <i>*</i></label>
-                                            <textarea class="form-control" id="description" v-model="description" style="min-height:150px;"></textarea>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-12 col-md-12">  
-                                        <div class="form-group">
-                                            <label for="outcome">تعداد</label>
-                                            <input v-if="selectedOption != 'ارسال خبرنامه'" class="form-control" id="outcome" v-model="outcome">
-                                            <select class="form-select" v-else v-model="outcome" @change="handleOptionChange" aria-label="Default select example">
-                                                <option v-for="item in Newsletter" :value="item.type">{{item.type}}</option>
-                                            </select>                                             
-                                        </div>
-                                    </div>                                                                                          
-                                </div>                                                          
-                            </div>
-                            <div class="modal-footer custom">
-                                <div class="left-side">
-                                    <button type="button" class="btn btn-link danger btn-block" data-dismiss="modal">لغو</button>
-                                </div>
-                                <div class="divider"></div>
-                                <div class="right-side">
-                                    <button type="button" @click="saveNewWorkReport()" class="btn btn-link success btn-block">ایجاد</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>      
-                <div class="modal fade" id="editNewTask" tabindex="-1" role="dialog" aria-labelledby="addNewTaskLabel" aria-hidden="true">
-					<div class="modal-dialog modal-lg" role="document">
-						<div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="addNewTaskLabel">ویرایش گزارش کار</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                    <span aria-hidden="true">×</span>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="row">
-                                    <div class="col-sm-12 col-md-6">  
-                                        <div class="form-group">
-                                            <label for="project_task">پروژه <i>*</i></label>
-                                            <select class="form-select" v-model="edit_project_task" aria-label="Default select example">
-                                                <option value="سوژه‌یابی">سوژه‌یابی</option>
-                                                <option value="مستندسازی">مستندسازی</option>
-                                                <option value="ارسال خبرنامه">ارسال خبرنامه (بولتن)</option>
-                                                <option value="ارسال خبر">ارسال خبر</option>
-                                                <option value="ارسال بصر">ارسال بصر</option>
-                                                <option value="برنامه نویسی">برنامه نویسی</option>
-                                                <option value="آموزش">آموزش</option>                                                
-                                                <option value="سایر">سایر</option>
-                                            </select>
-                                        </div>
-                                    </div>                                     
-                                    <div class="col-sm-12 col-md-6">  
-                                        <div class="form-group">
-                                            <label for="edit_date">تاریخ <i>*</i></label>
-                                            <date-picker v-model="edit_date"></date-picker>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-12 col-md-6">  
-                                        <div class="form-group">
-                                            <label for="edit_start_time">زمان شروع</label>
-                                            <input type="time" class="form-control" id="edit_start_time" v-model="edit_start_time">
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-12 col-md-6">  
-                                        <div class="form-group">
-                                            <label for="edit_end_time">زمان پایان</label>
-                                            <input type="time" class="form-control" id="edit_end_time" v-model="edit_end_time" >
-                                        </div>                                                                       
-                                    </div>                                                                      
-                                    <div class="col-sm-12 col-md-12">                                
-                                        <div class="form-group">
-                                            <label for="edit_description">توضیحات <i>*</i></label>
-                                            <textarea class="form-control" id="edit_description" v-model="edit_description" style="min-height:150px;"></textarea>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-12 col-md-12">  
-                                        <div class="form-group">
-                                            <label for="edit_outcome">تعداد</label>
-                                            <input class="form-control"  v-if="selectedOption != 'ارسال خبرنامه'" id="edit_outcome" v-model="edit_outcome">
-                                            <select class="form-select" v-else v-model="edit_outcome" @change="handleOptionChange" aria-label="Default select example">
-                                                <option v-for="item in Newsletter" :value="item.type">{{item.type}}</option>
-                                            </select>                                             
-                                        </div>
-                                    </div>                                                                                          
-                                </div>                                                          
-                            </div>
-                            <div class="modal-footer custom">
-                                <div class="left-side">
-                                    <button type="button" class="btn btn-link danger btn-block" data-dismiss="modal">لغو</button>
-                                </div>
-                                <div class="divider"></div>
-                                <div class="right-side">
-                                    <button type="button" @click="saveEditWorkReport()" class="btn btn-link success btn-block">ویرایش</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>                       
+                      
                 <div class="tasks-header row">
                     <div class="col-xl-3 col-lg-3 col-md-3 col-sm-12 col-6">
                         <div class="form-group">  
@@ -273,40 +156,73 @@
                     <div class="col-xl-2 col-lg-3 col-md-3 col-sm-12 col-6">
                         <div class="form-group"> 
                             <h3>ابزار</h3>
-                            <button class="btn btn-info btn-lg" @click="runNewGet()" title="اعمال فیلتر"><i class="fa fa-search"></i></button>
-                            <button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#addNewTask" title="افزودن گزارش کار"><i class="fa fa-plus"></i></button>
+                            <button class="btn btn-info btn-sm" @click="runNewGet()" title="اعمال فیلتر"><i class="fa fa-search"></i></button>
                         </div>
                     </div>   
 				</div>
             </div>
-                        
-            <div class="timeline">
-                <div class="timeline-row" v-for="item in WorkList">
-                    <div class="timeline-time">
-                        {{item.employee.username}} - {{convertDateToPersian(item.date)}}
-                        <button class="btn btn-danger btn-sm" @click="deleteWorkReport(item.id)"><i class="fa fa-trash"></i></button>
-                        <button class="btn btn-info btn-sm" @click="WorkReportId = item.id;edit_date= convertDateToPersian(item.date);
-            edit_employee_id = item.employee_id
-            edit_start_time=item.start_time;           
-            edit_end_time=item.end_time;
-            edit_description=item.description;
-            edit_outcome=item.outcome;
-            edit_project_task=item.project_task;
-            selectedOption = isValueInArray(item.project_task);
-            edit_location=item.location;" data-toggle="modal" data-target="#editNewTask"><i class="fa fa-edit"></i></button>
-                    </div>
-                    <div class="timeline-content">
-                        <i class="icon-attachment"></i>
-                        <h4>{{item.project_task}}</h4>
-                        <p>{{item.description}}</p>
-                        <div class="">
-                            <span class="badge badge-pill">
+            <hr>
+            <div class="col-sm-12">
+                <nav aria-label="Page navigation" v-if="pagination.last_page != 1">
+                    <ul class="pagination">
+                        <li v-if="pagination.current_page > 1">
+                            <a href="#" aria-label="Previous" class="page-link" @click.prevent="changePage(pagination.current_page - 1,orderbyValue)">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        <li v-for="page in pagesNumber"
+                            :class="[ page == isActived ? 'page-item active' : '']">
+                            <a href="#" @click.prevent="changePage(page,orderbyValue)" class="page-link">{{ page }}</a>
+                        </li>
+                        <li v-if="pagination.current_page < pagination.last_page">
+                            <a href="#" aria-label="Next" class="page-link"
+                                @click.prevent="changePage(pagination.current_page + 1,orderbyValue)">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>   
+            <hr>
+            <div class="row overflow-hidden">
+                <div class="col-12">
+                    <ul class="timeline timeline-center mt-5 mb-0">
+                        <li class="timeline-item mb-md-4 mb-5" v-for="item in WorkList">
+                            <span class="timeline-indicator timeline-indicator-primary" data-aos="zoom-in" data-aos-delay="200">
+                                <i class="bx bx-paint"></i>
                             </span>
-                            <span class="badge badge-pill">{{item.start_time}} - {{item.end_time}}</span>
-                        </div>                        
-                    </div>
-                </div>
-            </div>            
+                            <div class="timeline-event card p-0" data-aos="fade-right">
+                                <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+                                    <h6 class="card-title mb-0 mt-n1">{{item.project_task}}</h6>
+                                    <div class="meta primary-font mt-n1">
+                                        <span class="badge rounded-pill bg-label-primary">{{item.start_time}}</span>
+                                        <span class="badge rounded-pill bg-label-success">{{item.end_time}}</span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <p class="mb-2">
+                                        {{item.description}}
+                                    </p>
+                                    <button class="btn btn-danger btn-sm" @click="deleteWorkReport(item.id)"><i class="fa fa-trash"></i></button>
+                                    <button class="btn btn-info btn-sm" @click="WorkReportId = item.id;edit_date= convertDateToPersian(item.date);
+                                        edit_employee_id = item.employee_id
+                                        edit_start_time=item.start_time;           
+                                        edit_end_time=item.end_time;
+                                        edit_description=item.description;
+                                        edit_outcome=item.outcome;
+                                        edit_project_task=item.project_task;
+                                        selectedOption = isValueInArray(item.project_task);
+                                        edit_location=item.location;" data-bs-toggle="modal" data-toggle="modal" data-bs-target="#editNewTask" data-target="#editNewTask">
+                                        <i class="fa fa-edit"></i>
+                                    </button>                            
+                                </div>
+                                
+                                <div class="timeline-event-time">{{item.employee.username}} <br> {{convertDateToPersian(item.date)}}</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>   
+            </div>     
         </div>
         <div class="col-sm-12">
             <nav aria-label="Page navigation" v-if="pagination.last_page != 1">
@@ -331,7 +247,154 @@
         </div>        
     </div>
 
+    <div class="modal fade" id="addNewTask" tabindex="-1" aria-labelledby="addNewTaskLabel" style="display: none;" aria-hidden="false">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addNewTaskLabel">ایجاد گزارش کار</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-12 col-md-6">
+                            <div class="form-group">
+                                <label for="date">تاریخ</label>
+                                <date-picker v-model="date"></date-picker>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 col-md-6">  
+                            <div class="form-group">
+                                <label for="project_task">پروژه</label>
+                                <select class="form-select" v-model="project_task" aria-label="Default select example">
+                                    <option value="سوژه‌یابی">سوژه‌یابی</option>
+                                    <option value="مستندسازی">مستندسازی</option>
+                                    <option value="ارسال خبرنامه">ارسال خبرنامه (بولتن)</option>
+                                    <option value="ارسال خبر">ارسال خبر</option>
+                                    <option value="ارسال بصر">ارسال بصر</option>
+                                    <option value="برنامه نویسی">برنامه نویسی</option>                                                
+                                    <option value="آموزش">آموزش</option>    
+                                    <option value="ترجمه">ترجمه</option>                                                                                 
+                                    <option value="سایر">سایر</option>
+                                </select>
+                            </div>
+                        </div>                        
+                        <div class="col-sm-12 col-md-6">
+                            <div class="form-group">
+                                <label for="start_time">زمان شروع</label>
+                                <input type="time" class="form-control" id="start_time" v-model="start_time">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 col-md-6">
+                            <div class="form-group">
+                                <label for="end_time">زمان پایان</label>
+                                <input type="time" class="form-control" id="end_time" v-model="end_time" >
+                            </div>                                                                       
+                        </div>                                                                        
+                        <div class="col-sm-12 col-md-12">                                
+                            <div class="form-group">
+                                <label for="description">توضیحات</label>
+                                <textarea class="form-control" id="description" v-model="description" style="min-height:150px;"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 col-md-12">  
+                            <div class="form-group">
+                                <label for="outcome">نتیجه</label>
+                                <input v-if="project_task != 'ارسال خبرنامه'" class="form-control" id="outcome" v-model="outcome">
+                                <select class="form-select" v-else v-model="outcome" @change="handleOptionChange" aria-label="Default select example">
+                                    <option v-for="item in Newsletter" :value="item.type">{{item.type}}</option>
+                                </select>                                             
+                            </div>
+                        </div> 
+                        <div class="col-sm-12 col-md-8"></div>
 
+                        <div class="col-sm-12 col-md-2">  
+                            <br>
+                            <button type="button" class="btn btn-danger btn-block" data-bs-dismiss="modal" data-dismiss="modal" ><i class="fa fa-close menu-icon"></i> لغو</button> 
+                        </div>
+                        <div class="col-sm-12 col-md-2">  
+                            <br>
+                            <button type="button" @click="saveNewWorkReport()" class="btn btn-success btn-block" ><i class="fa fa-save menu-icon"></i> ایجاد</button>
+                        </div>                            
+                    </div>                                                          
+                </div>
+                <div class="modal-footer custom">
+                </div>
+            </div>
+        </div>
+    </div>      
+    <div class="modal fade" id="editNewTask" aria-labelledby="editNewTaskLabel" tabindex="-1" style="display: none;" aria-hidden="false">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addNewTaskLabel">ویرایش گزارش کار</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-12 col-md-6">
+                            <div class="form-group">
+                                <label for="edit_date">تاریخ</label>
+                                <date-picker v-model="edit_date"></date-picker>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 col-md-6">  
+                            <div class="form-group">
+                                <label for="project_task">پروژه</label>
+                                <select class="form-select" v-model="edit_project_task" aria-label="Default select example">
+                                    <option value="سوژه‌یابی">سوژه‌یابی</option>
+                                    <option value="مستندسازی">مستندسازی</option>
+                                    <option value="ارسال خبرنامه">ارسال خبرنامه (بولتن)</option>
+                                    <option value="ارسال خبر">ارسال خبر</option>
+                                    <option value="ارسال بصر">ارسال بصر</option>
+                                    <option value="برنامه نویسی">برنامه نویسی</option>
+                                    <option value="آموزش">آموزش</option> 
+                                    <option value="ترجمه">ترجمه</option>                                                                                 
+                                    <option value="سایر">سایر</option>
+                                </select>
+                            </div>
+                        </div>                        
+                        <div class="col-sm-12 col-md-6">
+                            <div class="form-group">
+                                <label for="edit_start_time">زمان شروع</label>
+                                <input type="time" class="form-control" id="edit_start_time" v-model="edit_start_time">
+                            </div>
+                        </div>
+                        <div class="col-sm-12 col-md-6">
+                            <div class="form-group">
+                                <label for="edit_end_time">زمان پایان</label>
+                                <input type="time" class="form-control" id="edit_end_time" v-model="edit_end_time" >
+                            </div>                                                                       
+                        </div>                                                                        
+                        <div class="col-sm-12 col-md-12">                                
+                            <div class="form-group">
+                                <label for="edit_description">توضیحات</label>
+                                <textarea class="form-control" id="edit_description" v-model="edit_description" style="min-height:150px;"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 col-md-12">  
+                            <div class="form-group">
+                                <label for="edit_outcome">نتیجه</label>
+                                <input class="form-control"  v-if="project_task != 'ارسال خبرنامه'" id="edit_outcome" v-model="edit_outcome">
+                                <select class="form-select" v-else v-model="edit_outcome" @change="handleOptionChange" aria-label="Default select example">
+                                    <option v-for="item in Newsletter" :value="item.type">{{item.type}}</option>
+                                </select>                                             
+                            </div>
+                        </div> 
+                        <div class="col-sm-12 col-md-8"></div>
+
+                        <div class="col-sm-12 col-md-2">  
+                            <br>
+                            <button type="button" class="btn btn-danger btn-block" data-bs-dismiss="modal" data-dismiss="modal" ><i class="fa fa-close menu-icon"></i> لغو</button> 
+                        </div>
+                        <div class="col-sm-12 col-md-2">  
+                            <br>
+                            <button type="button" @click="saveEditWorkReport()" class="btn btn-success btn-block" ><i class="fa fa-save menu-icon"></i> ویرایش</button>
+                        </div>                                                                                                                     
+                    </div>                                                          
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script>
@@ -381,11 +444,12 @@ export default {
             programDevelop:0,
             teaching:0,
             other:0,  
-            totalScore:0,   
+            totalScore:0,  
+            translate:0,
             isReadOnly:'readonly', 
             date_start:'',  
             date_end:'',
-            project_task_search:'' 
+            project_task_search:'',
         }
     },
     components: {  },  
@@ -432,6 +496,7 @@ export default {
                     this.teaching = response.data.teaching  
                     this.other = response.data.other
                     this.totalScore = response.data.totalScore
+                    this.translate = response.data.translate
                 }).catch(error => {
                     this.checkError(error);
                 });
@@ -517,7 +582,6 @@ export default {
                 const WorkReportId = this.WorkReportId
                 const employee_id = this.edit_employee_id;
                 const date = this.edit_date
-                console.log(date);
                 const start_time = this.edit_start_time;
                 const end_time = this.edit_end_time;
                 const description = this.edit_description;
@@ -562,6 +626,12 @@ export default {
                     headers: {'Authorization': `Bearer ${token}`},
                     data: { date, start_time , end_time , description , outcome , project_task , action , action }
                 }).then(response => {
+                    this.date = ""
+                    this.start_time = "";
+                    this.end_time = "";
+                    this.description = "";
+                    this.outcome = "";
+                    this.project_task = "";                    
                     Swal.fire(
                         'اضافه شد!',
                         'گزارش کار شما با موفقیت اضافه شد.',
@@ -641,5 +711,8 @@ export default {
 <style>
 .modal .modal-footer.custom .left-side, .modal .modal-footer.custom .right-side {
     width: 45%;
+}
+.swal2-container {
+  z-index: 25000;
 }
 </style>
