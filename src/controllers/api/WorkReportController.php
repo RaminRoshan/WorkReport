@@ -310,6 +310,24 @@ class WorkReportController extends Controller
         }        
         $other = $this->WorkReportRepository->Get($options); 
         
+        $options = [
+            'conditions' => [
+                ['column' => 'employee_id', 'operator' => '=', 'value' => $userId],
+                ['column' => 'project_task', 'operator' => 'like', 'value' => "ترجمه"],
+                [
+                    'column' => 'date',
+                    'operator' => 'between',
+                    'value' => [$startDate, $endDate],
+                ],
+            ],
+            'count' => true,
+        ];
+        if($request->project_task_search != '')
+        {
+            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
+        }        
+        $translate = $this->WorkReportRepository->Get($options); 
+
         $coefficients = [
             'سوژه‌یابی' => $findingPeopleProject,
             'مستندسازی' => $DocumentationProject,
@@ -319,6 +337,7 @@ class WorkReportController extends Controller
             'برنامه نویسی' => $programDevelop,
             'آموزش' => $teaching,
             'سایر' => $other,
+            'ترجمه' => $translate,
         ];
         
         $workPoints = WorkPoint::all();
@@ -347,7 +366,10 @@ class WorkReportController extends Controller
                     break;                    
                 case 'آموزش':
                     $totalScore = $totalScore + ($item->point * $coefficients['آموزش']);
-                    break;                    
+                    break; 
+                case 'ترجمه':
+                    $totalScore = $totalScore + ($item->point * $coefficients['ترجمه']);
+                    break;                                          
                 case 'سایر':
                     $totalScore = $totalScore + ($item->point * $coefficients['سایر']);
                     break;                    
@@ -367,7 +389,8 @@ class WorkReportController extends Controller
             'programDevelop'=>$programDevelop,
             'teaching'=>$teaching,
             'other'=>$other,
-            'totalScore'=>$totalScore            
+            'totalScore'=>$totalScore,
+            'translate'=>$translate           
         ]);
     }
 
