@@ -49,6 +49,20 @@
             </div>
         </div>
 
+        <div class="col-6 col-md-2 col-lg-2 mb-2" v-if="findingPeople || findingPeople>0">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="avatar mx-auto mb-2">
+                        <span class="avatar-initial rounded-circle bg-label-success"><i class="bx bx-file fs-4"></i></span>
+                    </div>
+                    <span class="d-block text-nowrap pt-1">سوژه‌یابی</span>
+                    <h2 class="mb-n3">{{ findingPeople }}</h2>
+                    <hr>
+                    <h2 class="mb-n3">{{ allfindingPeople }}</h2>
+                </div>
+            </div>
+        </div>
+
         <div class="col-6 col-md-2 col-lg-2 mb-2" v-if="Documentation || Documentation>0">
             <div class="card h-100">
                 <div class="card-body text-center">
@@ -58,7 +72,7 @@
                     <span class="d-block text-nowrap pt-1">مستندسازی</span>
                     <h2 class="mb-n3">{{ Documentation }}</h2>
                     <hr>
-                    <h2 class="mb-n3"></h2>
+                    <h2 class="mb-n3">{{ allDocumentation }}</h2>
                 </div>
             </div>
         </div>        
@@ -72,7 +86,7 @@
                     <span class="d-block text-nowrap pt-1">ارسال خبرنامه</span>
                     <h2 class="mb-n3">{{ writeBulltan }}</h2>
                     <hr>
-                    <h2 class="mb-n3"></h2>
+                    <h2 class="mb-n3">{{ allwriteBulltan }}</h2>
                 </div>
             </div>
         </div> 
@@ -86,7 +100,7 @@
                     <span class="d-block text-nowrap pt-1">ارسال خبر</span>
                     <h2 class="mb-n3">{{ sendNews }}</h2>
                     <hr>
-                    <h2 class="mb-n3"></h2>
+                    <h2 class="mb-n3">{{ allsendNews }}</h2>
                 </div>
             </div>
         </div>
@@ -100,7 +114,7 @@
                     <span class="d-block text-nowrap pt-1">ارسال بصر</span>
                     <h2 class="mb-n3">{{ sendNewspaper }}</h2>
                     <hr>
-                    <h2 class="mb-n3"></h2>
+                    <h2 class="mb-n3">{{ allsendNewspaper }}</h2>
                 </div>
             </div>
         </div>
@@ -114,7 +128,7 @@
                     <span class="d-block text-nowrap pt-1">برنامه نویسی</span>
                     <h2 class="mb-n3">{{ programDevelop }}</h2>
                     <hr>
-                    <h2 class="mb-n3"></h2>
+                    <h2 class="mb-n3">{{ allprogramDevelop }}</h2>
                 </div>
             </div>
         </div>
@@ -128,7 +142,7 @@
                     <span class="d-block text-nowrap pt-1">آموزش</span>
                     <h2 class="mb-n3">{{ teaching }}</h2>
                     <hr>
-                    <h2 class="mb-n3"></h2>
+                    <h2 class="mb-n3">{{ allteaching }}</h2>
                 </div>
             </div>
         </div>
@@ -142,7 +156,7 @@
                     <span class="d-block text-nowrap pt-1">ترجمه</span>
                     <h2 class="mb-n3">{{ translate }}</h2>
                     <hr>
-                    <h2 class="mb-n3"></h2>
+                    <h2 class="mb-n3">{{ alltranslate }}</h2>
                 </div>
             </div>
         </div> 
@@ -156,7 +170,7 @@
                     <span class="d-block text-nowrap pt-1">سایر</span>
                     <h2 class="mb-n3">{{ other }}</h2>
                     <hr>
-                    <h2 class="mb-n3"></h2>
+                    <h2 class="mb-n3">{{ allother }}</h2>
                 </div>
             </div>
         </div> 
@@ -486,6 +500,15 @@ export default {
             other:0,  
             totalScore:0,  
             translate:0,
+            allfindingPeople:0,
+            allDocumentation:0,
+            allwriteBulltan:0,
+            allsendNews:0,
+            allsendNewspaper:0,
+            allprogramDevelop:0,
+            allteaching:0,
+            allother:0,  
+            alltranslate:0,            
             isReadOnly:'readonly', 
             date_start:'',  
             date_end:'',
@@ -537,6 +560,15 @@ export default {
                     this.other = response.data.other
                     this.totalScore = response.data.totalScore
                     this.translate = response.data.translate
+                    this.allfindingPeople = response.data.allfindingPeople              
+                    this.allDocumentation = response.data.allDocumentation  
+                    this.allwriteBulltan = response.data.allwriteBulltan  
+                    this.allsendNews = response.data.allsendNews  
+                    this.allsendNewspaper = response.data.allsendNewspaper  
+                    this.allprogramDevelop = response.data.allprogramDevelop  
+                    this.allteaching = response.data.allteaching  
+                    this.allother = response.data.allother
+                    this.alltranslate = response.data.alltranslate                    
                 }).catch(error => {
                     this.checkError(error);
                 });

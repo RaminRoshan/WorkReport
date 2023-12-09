@@ -75,8 +75,14 @@ class WorkReportController extends Controller
 
         $today = Carbon::now();
         $nextDay = $today->addDay();
+        
+        $jtoday = Jalalian::fromDateTime($today);
+        $jyear = $jtoday->getYear();
+        $jmounth = $jtoday->getMonth();
+        $jday = 1;
+        $startdate = (new Jalalian($jyear, $jmounth, $jday, 0, 0, 0))->toCarbon()->toDateTimeString();
 
-        $startDate = ($request->date_start == '') ? '0000-00-00' : Jalalian::fromFormat('Y/m/d', $request->date_start)->toCarbon();
+        $startDate = ($request->date_start == '') ? $startdate : Jalalian::fromFormat('Y/m/d', $request->date_start)->toCarbon();
         $endDate = ($request->date_end == '') ? $nextDay->toDateString() : Jalalian::fromFormat('Y/m/d', $request->date_end)->toCarbon();
 
         $options = [
@@ -116,7 +122,10 @@ class WorkReportController extends Controller
 
         $allCount = $this->WorkReportRepository->Get($options);
 
-        $projectPercent = number_format($userCount * 100 / $allCount,2);
+        if($allCount == 0)
+            $projectPercent = 0;
+        else
+            $projectPercent = number_format($userCount * 100 / $allCount,2);
 
         $options = [
             'conditions' => [
@@ -141,6 +150,26 @@ class WorkReportController extends Controller
 
         $options = [
             'conditions' => [
+                ['column' => 'project_task', 'operator' => 'like', 'value' => "سوژه‌یابی"],
+                [
+                    'column' => 'date',
+                    'operator' => 'between',
+                    'value' => [$startDate, $endDate],
+                ],
+            ],
+            'sum' => [
+                ['column' => 'outcome', 'alias' => 'sum_outcome'],
+            ],            
+            'get' => true,
+        ];
+        if($request->project_task_search != '')
+        {
+            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
+        }        
+        $allFindingPeople = $this->WorkReportRepository->Get($options)->first()->sum_outcome;
+
+        $options = [
+            'conditions' => [
                 ['column' => 'employee_id', 'operator' => '=', 'value' => $userId],
                 ['column' => 'project_task', 'operator' => 'like', 'value' => "سوژه‌یابی"],
                 [
@@ -155,7 +184,25 @@ class WorkReportController extends Controller
         {
             $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
         }        
-        $findingPeopleProject = $this->WorkReportRepository->Get($options);        
+        $findingPeopleProject = $this->WorkReportRepository->Get($options);  
+        
+        $options = [
+            'conditions' => [
+                ['column' => 'project_task', 'operator' => 'like', 'value' => "سوژه‌یابی"],
+                [
+                    'column' => 'date',
+                    'operator' => 'between',
+                    'value' => [$startDate, $endDate],
+                ],
+            ],
+            'count' => true,
+        ];
+        if($request->project_task_search != '')
+        {
+            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
+        }        
+        $allFindingPeopleProject = $this->WorkReportRepository->Get($options);  
+
 
         $options = [
             'conditions' => [
@@ -180,6 +227,26 @@ class WorkReportController extends Controller
 
         $options = [
             'conditions' => [
+                ['column' => 'project_task', 'operator' => 'like', 'value' => "مستندسازی"],
+                [
+                    'column' => 'date',
+                    'operator' => 'between',
+                    'value' => [$startDate, $endDate],
+                ],
+            ],
+            'sum' => [
+                ['column' => 'outcome', 'alias' => 'sum_outcome'],
+            ],            
+            'get' => true,
+        ];
+        if($request->project_task_search != '')
+        {
+            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
+        }        
+        $allDocumentation = $this->WorkReportRepository->Get($options)->first()->sum_outcome; 
+
+        $options = [
+            'conditions' => [
                 ['column' => 'employee_id', 'operator' => '=', 'value' => $userId],
                 ['column' => 'project_task', 'operator' => 'like', 'value' => "مستندسازی"],
                 [
@@ -198,6 +265,23 @@ class WorkReportController extends Controller
 
         $options = [
             'conditions' => [
+                ['column' => 'project_task', 'operator' => 'like', 'value' => "مستندسازی"],
+                [
+                    'column' => 'date',
+                    'operator' => 'between',
+                    'value' => [$startDate, $endDate],
+                ],
+            ],          
+            'count' => true,
+        ];
+        if($request->project_task_search != '')
+        {
+            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
+        }        
+        $allDocumentationProject = $this->WorkReportRepository->Get($options);
+
+        $options = [
+            'conditions' => [
                 ['column' => 'employee_id', 'operator' => '=', 'value' => $userId],
                 ['column' => 'project_task', 'operator' => 'like', 'value' => "ارسال خبرنامه"],
                 [
@@ -213,6 +297,23 @@ class WorkReportController extends Controller
             $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
         }        
         $writeBulltan = $this->WorkReportRepository->Get($options);  
+
+        $options = [
+            'conditions' => [
+                ['column' => 'project_task', 'operator' => 'like', 'value' => "ارسال خبرنامه"],
+                [
+                    'column' => 'date',
+                    'operator' => 'between',
+                    'value' => [$startDate, $endDate],
+                ],
+            ],          
+            'count' => true,
+        ];
+        if($request->project_task_search != '')
+        {
+            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
+        }        
+        $allwriteBulltan = $this->WorkReportRepository->Get($options);
 
         $options = [
             'conditions' => [
@@ -237,6 +338,26 @@ class WorkReportController extends Controller
 
         $options = [
             'conditions' => [
+                ['column' => 'project_task', 'operator' => 'like', 'value' => "ارسال خبر"],
+                [
+                    'column' => 'date',
+                    'operator' => 'between',
+                    'value' => [$startDate, $endDate],
+                ],
+            ],
+            'sum' => [
+                ['column' => 'outcome', 'alias' => 'sum_outcome'],
+            ],            
+            'get' => true,
+        ];
+        if($request->project_task_search != '')
+        {
+            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
+        }        
+        $allsendNews = $this->WorkReportRepository->Get($options)->first()->sum_outcome;        
+
+        $options = [
+            'conditions' => [
                 ['column' => 'employee_id', 'operator' => '=', 'value' => $userId],
                 ['column' => 'project_task', 'operator' => 'like', 'value' => "ارسال بصر"],
                 [
@@ -258,6 +379,26 @@ class WorkReportController extends Controller
 
         $options = [
             'conditions' => [
+                ['column' => 'project_task', 'operator' => 'like', 'value' => "ارسال بصر"],
+                [
+                    'column' => 'date',
+                    'operator' => 'between',
+                    'value' => [$startDate, $endDate],
+                ],
+            ],
+            'sum' => [
+                ['column' => 'outcome', 'alias' => 'sum_outcome'],
+            ],            
+            'get' => true,
+        ];
+        if($request->project_task_search != '')
+        {
+            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
+        }        
+        $allsendNewspaper = $this->WorkReportRepository->Get($options)->first()->sum_outcome;
+
+        $options = [
+            'conditions' => [
                 ['column' => 'employee_id', 'operator' => '=', 'value' => $userId],
                 ['column' => 'project_task', 'operator' => 'like', 'value' => "برنامه نویسی"],
                 [
@@ -273,6 +414,23 @@ class WorkReportController extends Controller
             $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
         }        
         $programDevelop = $this->WorkReportRepository->Get($options); 
+
+        $options = [
+            'conditions' => [
+                ['column' => 'project_task', 'operator' => 'like', 'value' => "برنامه نویسی"],
+                [
+                    'column' => 'date',
+                    'operator' => 'between',
+                    'value' => [$startDate, $endDate],
+                ],
+            ],
+            'count' => true,
+        ];
+        if($request->project_task_search != '')
+        {
+            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
+        }        
+        $allprogramDevelop = $this->WorkReportRepository->Get($options);        
 
         $options = [
             'conditions' => [
@@ -294,6 +452,23 @@ class WorkReportController extends Controller
 
         $options = [
             'conditions' => [
+                ['column' => 'project_task', 'operator' => 'like', 'value' => "آموزش"],
+                [
+                    'column' => 'date',
+                    'operator' => 'between',
+                    'value' => [$startDate, $endDate],
+                ],
+            ],
+            'count' => true,
+        ];
+        if($request->project_task_search != '')
+        {
+            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
+        }        
+        $allteaching = $this->WorkReportRepository->Get($options);
+
+        $options = [
+            'conditions' => [
                 ['column' => 'employee_id', 'operator' => '=', 'value' => $userId],
                 ['column' => 'project_task', 'operator' => 'like', 'value' => "سایر"],
                 [
@@ -312,6 +487,23 @@ class WorkReportController extends Controller
         
         $options = [
             'conditions' => [
+                ['column' => 'project_task', 'operator' => 'like', 'value' => "سایر"],
+                [
+                    'column' => 'date',
+                    'operator' => 'between',
+                    'value' => [$startDate, $endDate],
+                ],
+            ],
+            'count' => true,
+        ];
+        if($request->project_task_search != '')
+        {
+            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
+        }        
+        $allother = $this->WorkReportRepository->Get($options); 
+
+        $options = [
+            'conditions' => [
                 ['column' => 'employee_id', 'operator' => '=', 'value' => $userId],
                 ['column' => 'project_task', 'operator' => 'like', 'value' => "ترجمه"],
                 [
@@ -327,6 +519,23 @@ class WorkReportController extends Controller
             $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
         }        
         $translate = $this->WorkReportRepository->Get($options); 
+
+        $options = [
+            'conditions' => [
+                ['column' => 'project_task', 'operator' => 'like', 'value' => "ترجمه"],
+                [
+                    'column' => 'date',
+                    'operator' => 'between',
+                    'value' => [$startDate, $endDate],
+                ],
+            ],
+            'count' => true,
+        ];
+        if($request->project_task_search != '')
+        {
+            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
+        }        
+        $alltranslate = $this->WorkReportRepository->Get($options); 
 
         $coefficients = [
             'سوژه‌یابی' => $findingPeopleProject,
@@ -390,7 +599,16 @@ class WorkReportController extends Controller
             'teaching'=>$teaching,
             'other'=>$other,
             'totalScore'=>$totalScore,
-            'translate'=>$translate           
+            'translate'=>$translate,
+            'allfindingPeople'=>$allFindingPeople,
+            'allDocumentation'=>$allDocumentation,
+            'allwriteBulltan'=>$allwriteBulltan,
+            'allsendNews'=>$allsendNews,
+            'allsendNewspaper'=>$allsendNewspaper,
+            'allprogramDevelop'=>$allprogramDevelop,
+            'allteaching'=>$allteaching,
+            'allother'=>$allother,
+            'alltranslate'=>$alltranslate                        
         ]);
     }
 
@@ -481,9 +699,15 @@ class WorkReportController extends Controller
         $today = Carbon::now();
         $nextDay = $today->addDay();
 
+        $jtoday = Jalalian::fromDateTime($today);
+        $jyear = $jtoday->getYear();
+        $jmounth = $jtoday->getMonth();
+        $jday = 1;
+        $startdate = (new Jalalian($jyear, $jmounth, $jday, 0, 0, 0))->toCarbon()->toDateTimeString();
+
         $employee_id = auth()->user()->id;
 
-        $startDate = ($request->date_start == '') ? '0000-00-00' : Jalalian::fromFormat('Y/m/d', $request->date_start)->toCarbon();
+        $startDate = ($request->date_start == '') ? $startdate : Jalalian::fromFormat('Y/m/d', $request->date_start)->toCarbon();
         $endDate = ($request->date_end == '') ? $nextDay->toDateString() : Jalalian::fromFormat('Y/m/d', $request->date_end)->toCarbon();
         
         $options = [
