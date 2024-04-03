@@ -37,8 +37,12 @@ class WorkReportController extends Controller
         }
 
         $mix = ['packages/pishgaman/WorkReport/src/resources/vue/WorkReportApp.js'];
-        $card = 'میز کار پایش';
 
-        return view('WorkReportView::index',['mix' => $mix]);
+        $breadcrumb = [
+            __('WorkReportLang::RoutName.Kara')=>route('home') , 
+            'مدیریت گزارش کار'=>route('home')
+        ];
+
+        return view('WorkReportView::index',['mix' => $mix,'breadcrumb'=>$breadcrumb]);
     }
 }

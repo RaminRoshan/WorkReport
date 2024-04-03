@@ -21,7 +21,7 @@
     </nav>
     <br>
     <div class="row">
-        <div class="col-6 col-md-3 col-lg-3 mb-2">
+        <div class="col-6 col-md-2 col-lg-2 mb-2">
             <div class="card h-100">
                 <div class="card-body text-center">
                     <div class="avatar mx-auto mb-2">
@@ -29,36 +29,30 @@
                     </div>
                     <span class="d-block text-nowrap pt-1">فعالیت</span>
                     <h2 class="mb-n3">{{ userCount }}</h2>
-                    <hr>
-                    <h2 class="mb-n3">{{ allCount }}</h2>
                 </div>
             </div>
         </div>
   
-        <div class="col-6 col-md-3 col-lg-3 mb-2">
+        <div class="col-6 col-md-2 col-lg-2 mb-2" v-if="findingPeople || findingPeople>0">
             <div class="card h-100">
                 <div class="card-body text-center">
                     <div class="avatar mx-auto mb-2">
-                        <span class="avatar-initial rounded-circle bg-label-success"><i class="fa fa-percent fs-4"></i></span>
+                        <span class="avatar-initial rounded-circle bg-label-success"><i class="fa fa-users fs-4"></i></span>
                     </div>
-                    <span class="d-block text-nowrap pt-1">درصد فعالیت / امتیاز</span>
-                    <h2 class="mb-n3">{{ projectPercent }}</h2>
-                    <hr>
-                    <h2 class="mb-n3">{{ totalScore }}</h2>
+                    <span class="d-block text-nowrap pt-1">سوژه‌یابی</span>
+                    <h2 class="mb-n3">{{ findingPeople }}</h2>
                 </div>
             </div>
         </div>
 
-        <div class="col-6 col-md-2 col-lg-2 mb-2" v-if="findingPeople || findingPeople>0">
+        <div class="col-6 col-md-2 col-lg-2 mb-2" v-if="identification || identification>0">
             <div class="card h-100">
                 <div class="card-body text-center">
                     <div class="avatar mx-auto mb-2">
                         <span class="avatar-initial rounded-circle bg-label-success"><i class="bx bx-file fs-4"></i></span>
                     </div>
-                    <span class="d-block text-nowrap pt-1">سوژه‌یابی</span>
-                    <h2 class="mb-n3">{{ findingPeople }}</h2>
-                    <hr>
-                    <h2 class="mb-n3">{{ allfindingPeople }}</h2>
+                    <span class="d-block text-nowrap pt-1">شناسایی</span>
+                    <h2 class="mb-n3">{{ identification }}</h2>
                 </div>
             </div>
         </div>
@@ -71,8 +65,6 @@
                     </div>
                     <span class="d-block text-nowrap pt-1">مستندسازی</span>
                     <h2 class="mb-n3">{{ Documentation }}</h2>
-                    <hr>
-                    <h2 class="mb-n3">{{ allDocumentation }}</h2>
                 </div>
             </div>
         </div>        
@@ -85,8 +77,6 @@
                     </div>
                     <span class="d-block text-nowrap pt-1">ارسال خبرنامه</span>
                     <h2 class="mb-n3">{{ writeBulltan }}</h2>
-                    <hr>
-                    <h2 class="mb-n3">{{ allwriteBulltan }}</h2>
                 </div>
             </div>
         </div> 
@@ -99,8 +89,6 @@
                     </div>
                     <span class="d-block text-nowrap pt-1">ارسال خبر</span>
                     <h2 class="mb-n3">{{ sendNews }}</h2>
-                    <hr>
-                    <h2 class="mb-n3">{{ allsendNews }}</h2>
                 </div>
             </div>
         </div>
@@ -113,8 +101,6 @@
                     </div>
                     <span class="d-block text-nowrap pt-1">ارسال بصر</span>
                     <h2 class="mb-n3">{{ sendNewspaper }}</h2>
-                    <hr>
-                    <h2 class="mb-n3">{{ allsendNewspaper }}</h2>
                 </div>
             </div>
         </div>
@@ -127,8 +113,6 @@
                     </div>
                     <span class="d-block text-nowrap pt-1">برنامه نویسی</span>
                     <h2 class="mb-n3">{{ programDevelop }}</h2>
-                    <hr>
-                    <h2 class="mb-n3">{{ allprogramDevelop }}</h2>
                 </div>
             </div>
         </div>
@@ -141,8 +125,6 @@
                     </div>
                     <span class="d-block text-nowrap pt-1">آموزش</span>
                     <h2 class="mb-n3">{{ teaching }}</h2>
-                    <hr>
-                    <h2 class="mb-n3">{{ allteaching }}</h2>
                 </div>
             </div>
         </div>
@@ -155,8 +137,6 @@
                     </div>
                     <span class="d-block text-nowrap pt-1">ترجمه</span>
                     <h2 class="mb-n3">{{ translate }}</h2>
-                    <hr>
-                    <h2 class="mb-n3">{{ alltranslate }}</h2>
                 </div>
             </div>
         </div> 
@@ -169,15 +149,13 @@
                     </div>
                     <span class="d-block text-nowrap pt-1">سایر</span>
                     <h2 class="mb-n3">{{ other }}</h2>
-                    <hr>
-                    <h2 class="mb-n3">{{ allother }}</h2>
                 </div>
             </div>
         </div> 
     </div>
     <div class="row">
         <div class="col-sm-12">
-            <div class="card">
+            <div class="card" style="background: ghostwhite;">
                 <div class="card-body">
                     <div class="row">
                         <div class="col-xl-3 col-lg-3 col-md-3 col-sm-12 col-6">
@@ -196,6 +174,7 @@
                                 <select class="form-select" aria-label="Default select example" v-model="project_task_search">
                                     <option value=""></option>
                                     <option value="سوژه‌یابی">سوژه‌یابی</option>
+                                    <option value="شناسایی">شناسایی</option>
                                     <option value="مستندسازی">مستندسازی</option>
                                     <option value="ارسال خبرنامه">ارسال خبرنامه</option>
                                     <option value="ارسال خبر">ارسال خبر</option>
@@ -321,6 +300,7 @@
                                 <label for="project_task">پروژه</label>
                                 <select class="form-select" v-model="project_task" aria-label="Default select example">
                                     <option value="سوژه‌یابی">سوژه‌یابی</option>
+                                    <option value="شناسایی">شناسایی</option>
                                     <option value="مستندسازی">مستندسازی</option>
                                     <option value="ارسال خبرنامه">ارسال خبرنامه (بولتن)</option>
                                     <option value="ارسال خبر">ارسال خبر</option>
@@ -396,6 +376,7 @@
                                 <label for="project_task">پروژه</label>
                                 <select class="form-select" v-model="edit_project_task" aria-label="Default select example">
                                     <option value="سوژه‌یابی">سوژه‌یابی</option>
+                                    <option value="شناسایی">شناسایی</option>
                                     <option value="مستندسازی">مستندسازی</option>
                                     <option value="ارسال خبرنامه">ارسال خبرنامه (بولتن)</option>
                                     <option value="ارسال خبر">ارسال خبر</option>
@@ -513,6 +494,8 @@ export default {
             date_start:'',  
             date_end:'',
             project_task_search:'',
+            identification:0,
+            allidentification:0
         }
     },
     components: {  },  
@@ -568,7 +551,9 @@ export default {
                     this.allprogramDevelop = response.data.allprogramDevelop  
                     this.allteaching = response.data.allteaching  
                     this.allother = response.data.allother
-                    this.alltranslate = response.data.alltranslate                    
+                    this.alltranslate = response.data.alltranslate  
+                    this.identification = response.data.identification                  
+                    this.allidentification = response.data.allidentification                  
                 }).catch(error => {
                     this.checkError(error);
                 });
@@ -788,3 +773,5 @@ export default {
   z-index: 25000;
 }
 </style>
+
+
