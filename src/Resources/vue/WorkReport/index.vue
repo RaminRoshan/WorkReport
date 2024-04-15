@@ -265,13 +265,11 @@
                             <span aria-hidden="true">&laquo;</span>
                         </a>
                     </li>
-                    <li v-for="page in pagesNumber"
-                        :class="[ page == isActived ? 'page-item active' : '']">
+                    <li v-for="page in pagesNumber" :class="[ page == isActived ? 'page-item active' : '']">
                         <a href="#" @click.prevent="changePage(page,orderbyValue)" class="page-link">{{ page }}</a>
                     </li>
                     <li v-if="pagination.current_page < pagination.last_page">
-                        <a href="#" aria-label="Next" class="page-link"
-                            @click.prevent="changePage(pagination.current_page + 1,orderbyValue)">
+                        <a href="#" aria-label="Next" class="page-link" @click.prevent="changePage(pagination.current_page + 1,orderbyValue)">
                             <span aria-hidden="true">&raquo;</span>
                         </a>
                     </li>

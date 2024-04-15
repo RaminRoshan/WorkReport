@@ -56,14 +56,23 @@
                             <span>{{sendNewspaper}}</span>
                             <span class="fw-semibold">{{sendNewspaperPercent}}%</span>
                         </div>
-                    </li>                                                      
+                    </li>   
+                    <li class="mb-3 d-flex justify-content-between">
+                        <div class="d-flex align-items-center me-3">
+                            <span class="badge badge-dot bg-success me-2"></span> شناسایی
+                        </div>
+                        <div class="d-flex gap-3">
+                            <span>{{identification}}</span>
+                            <span class="fw-semibold">{{identificationPercent}}% ({{ identificationSum }})</span>
+                        </div>
+                    </li>                                                                       
                     <li class="mb-3 d-flex justify-content-between">
                         <div class="d-flex align-items-center me-3">
                             <span class="badge badge-dot bg-success me-2"></span> سوژه‌یابی
                         </div>
                         <div class="d-flex gap-3">
                             <span>{{findingPeople}}</span>
-                            <span class="fw-semibold">{{findingPeoplePercent}}%</span>
+                            <span class="fw-semibold">{{findingPeoplePercent}}% ({{ findingPeopleSum }})</span>
                         </div>
                     </li>
                     <li class="mb-3 d-flex justify-content-between">
@@ -72,7 +81,7 @@
                         </div>
                         <div class="d-flex gap-3">
                             <span>{{Documentation}}</span>
-                            <span class="fw-semibold">{{DocumentationPercent}}%</span>
+                            <span class="fw-semibold">{{DocumentationPercent}}% ({{DocumentationSum}})</span>
                         </div>
                     </li>
                     <li class="mb-3 d-flex justify-content-between">
@@ -306,6 +315,11 @@ export default {
             translate:0,
             translatePercent:0,
             chartKey:0,
+            DocumentationSum:0,
+            findingPeopleSum:0,
+            identificationPercent:0,
+            identification:0,
+            identificationSum:0,
             data : {
                 labels: [],
                 datasets: [
@@ -348,10 +362,15 @@ export default {
                     this.rankedUsers = response.data.rankedUsers;                
                     this.allWorkReport = response.data.allWorkReport;                
                     this.theBest = response.data.theBest;                
+                    this.identification = response.data.identification; 
+                    this.identificationSum = response.data.identificationSum; 
+                    this.identificationPercent = response.data.identificationPercent; 
                     this.findingPeople = response.data.findingPeople; 
-                    this.findingPeoplePercent = response.data.findingPeoplePercent;              
+                    this.findingPeoplePercent = response.data.findingPeoplePercent;   
+                    this.findingPeopleSum = response.data.findingPeopleSum;           
                     this.Documentation = response.data.Documentation; 
                     this.DocumentationPercent = response.data.DocumentationPercent;  
+                    this.DocumentationSum = response.data.DocumentationSum; 
                     this.writeBulltan = response.data.writeBulltan; 
                     this.writeBulltanPercent = response.data.writeBulltanPercent;     
                     this.sendNews = response.data.sendNews; 

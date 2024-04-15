@@ -53,7 +53,6 @@ class WorkReportController extends Controller
         if ($request->has('action')) {
             $functionName = $request->action;
             $method = $request->method();
-            // Log::error('method: ' . $method);
 
             if ($this->isValidAction($functionName, $method)) {
                 return $this->$functionName($request);
@@ -98,7 +97,32 @@ class WorkReportController extends Controller
             });
         })
         ->count();
-                            
+                 
+        $identification1 = WorkReport::whereBetween('date',[$startDate, $endDate])->where('project_task','like','شناسایی')
+        ->whereHas('employee', function ($query) use ($departmentId) {
+            $query->whereHas('department_user', function ($query) use ($departmentId) {
+                $query->where('department_id', $departmentId);
+            });
+        })
+        ->count();  
+
+        $options = [
+            'conditions' => [
+                ['column' => 'project_task', 'operator' => 'like', 'value' => "شناسایی"],
+                [
+                    'column' => 'date',
+                    'operator' => 'between',
+                    'value' => [$startDate, $endDate],
+                ],
+            ],
+            'sum' => [
+                ['column' => 'outcome', 'alias' => 'sum_outcome'],
+            ],            
+            'get' => true,
+        ];
+       
+        $identificationSum = $this->WorkReportRepository->Get($options)->first()->sum_outcome; 
+        
         $findingPeople = WorkReport::whereBetween('date',[$startDate, $endDate])->where('project_task','like','سوژه‌یابی')
         ->whereHas('employee', function ($query) use ($departmentId) {
             $query->whereHas('department_user', function ($query) use ($departmentId) {
@@ -107,6 +131,23 @@ class WorkReportController extends Controller
         })
         ->count();
 
+        $options = [
+            'conditions' => [
+                ['column' => 'project_task', 'operator' => 'like', 'value' => "سوژه‌یابی"],
+                [
+                    'column' => 'date',
+                    'operator' => 'between',
+                    'value' => [$startDate, $endDate],
+                ],
+            ],
+            'sum' => [
+                ['column' => 'outcome', 'alias' => 'sum_outcome'],
+            ],            
+            'get' => true,
+        ];
+       
+        $findingPeopleSum = $this->WorkReportRepository->Get($options)->first()->sum_outcome; 
+
         $Documentation = WorkReport::whereBetween('date',[$startDate, $endDate])->where('project_task','like','مستندسازی')
         ->whereHas('employee', function ($query) use ($departmentId) {
             $query->whereHas('department_user', function ($query) use ($departmentId) {
@@ -114,7 +155,24 @@ class WorkReportController extends Controller
             });
         })
         ->count();
-        
+
+        $options = [
+            'conditions' => [
+                ['column' => 'project_task', 'operator' => 'like', 'value' => "مستندسازی"],
+                [
+                    'column' => 'date',
+                    'operator' => 'between',
+                    'value' => [$startDate, $endDate],
+                ],
+            ],
+            'sum' => [
+                ['column' => 'outcome', 'alias' => 'sum_outcome'],
+            ],            
+            'get' => true,
+        ];
+       
+        $DocumentationSum = $this->WorkReportRepository->Get($options)->first()->sum_outcome;  
+
         $sendNews = WorkReport::whereBetween('date',[$startDate, $endDate])->where('project_task','like','ارسال خبر')
         ->whereHas('employee', function ($query) use ($departmentId) {
             $query->whereHas('department_user', function ($query) use ($departmentId) {
@@ -429,10 +487,15 @@ class WorkReportController extends Controller
             'lastReport'=>$lastReport,
             'ReleaseProcess' => $ReleaseProcess,
             'allWorkReport' => $allWorkReport,
+            'identificationSum' => $identificationSum,
+            'identification' => $identification1,
+            'identificationPercent' => ($identification1 != 0) ? round($identification1 / $allWorkReport * 100,2) : 0,
             'findingPeople' => $findingPeople,
             'findingPeoplePercent' => ($allWorkReport != 0) ? round($findingPeople / $allWorkReport * 100,2) : 0,
+            'findingPeopleSum' => $findingPeopleSum,
             'Documentation' => $Documentation,
             'DocumentationPercent' => ($allWorkReport != 0) ? round($Documentation / $allWorkReport * 100,2) : 0,
+            'DocumentationSum' => $DocumentationSum,
             'sendNews' => $sendNews,
             'sendNewsPercent' => ($allWorkReport != 0) ? round($sendNews / $allWorkReport * 100,2) : 0,
             'writeBulltan' => $writeBulltan,
@@ -1030,6 +1093,7 @@ class WorkReportController extends Controller
             'other'=>$other,
             'totalScore'=>$totalScore,
             'translate'=>$translate,
+            'identification'=>$identification,
             // 'allfindingPeople'=>$allFindingPeople,
             // 'allDocumentation'=>$allDocumentation,
             // 'allwriteBulltan'=>$allwriteBulltan,
@@ -1039,7 +1103,6 @@ class WorkReportController extends Controller
             // 'allteaching'=>$allteaching,
             // 'allother'=>$allother,
             // 'alltranslate'=>$alltranslate,
-            // 'identification'=>$identification,
             // 'allidentification'=>$allidentification,
                                   
         ]);
