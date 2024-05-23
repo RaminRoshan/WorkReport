@@ -13,4 +13,4 @@ app.component('DatePicker', Vue3PersianDatetimePicker)
 app.mixin(globalMixin);
 
 // Mount the app to the element with id "LoginApp"
-app.mount("#WorkReportHomeApp");
+app.mount("#MonitoringApp");

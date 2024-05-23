@@ -7,6 +7,7 @@ use Pishgaman\Pishgaman\Repositories\LogRepository;
 use Pishgaman\Pishgaman\Middleware\CheckMenuAccess;
 use Pishgaman\WorkReport\Database\Repository\WorkReportRepository;
 use Pishgaman\WorkReport\Database\Models\WorkReport;
+use Pishgaman\WorkReport\Database\Models\Project;
 use App\Http\Controllers\Controller;
 use Pishgaman\WorkReport\Database\Models\Newsletter;
 use Pishgaman\WorkReport\Database\Models\WorkPoint;
@@ -27,14 +28,22 @@ class WorkReportController extends Controller
         'updateWorkReport',
         'getNewsletter',
         'userStatistics',
-        'getStatistics'
+        'getStatistics',
+        'getSetting',
+        'saveNewProject',
+        'deleteProject',
+        'saveNewSelectItem',
+        'getSelectItem',
+        'getProjectForShow',
+        'getProjectsForShow',
+        'getProjectItemsForShow'
     ];
 
     protected $validMethods = [
-        'GET' => ['getWorkList','getNewsletter','userStatistics','getStatistics'], // Added 'createAccessLevel' as a valid method-action pair
-        'POST' => ['saveNewWorkReport'], // Added 'createAccessLevel' as a valid action for POST method
+        'GET' => ['getWorkList','getNewsletter','userStatistics','getStatistics','getSetting','getSelectItem','getProjectForShow','getProjectsForShow','getProjectItemsForShow'], // Added 'createAccessLevel' as a valid method-action pair
+        'POST' => ['saveNewWorkReport','saveNewProject','saveNewSelectItem'], // Added 'createAccessLevel' as a valid action for POST method
         'PUT' => ['updateWorkReport'],
-        'DELETE' => ['deleteWorkReport']
+        'DELETE' => ['deleteWorkReport','deleteProject']
     ];
 
     protected $user;
@@ -67,6 +76,111 @@ class WorkReportController extends Controller
     private function isValidAction($functionName, $method)
     {
         return in_array($functionName, $this->validActions) && in_array($functionName, $this->validMethods[$method]);
+    }
+
+    public function getSelectItem(Request $request)
+    {
+        if (!$this->isValidAction('getSelectItem', 'GET')) {
+            return response()->json(['errors' => 'requestNotAllowed'], 422);
+        }
+
+        $currentUser = auth()->user();
+        $DepartmentUser = DepartmentUser::where('user_id',$currentUser->id)->first();
+        $departmentId = $DepartmentUser->department_id ?? 0;
+
+        $subSelectItem = Project::where([['department_id',$departmentId],['pid',$request->id]])->get();
+
+        return response()->json(['subSelectItem'=>$subSelectItem], 200); 
+    }
+
+    public function saveNewSelectItem(Request $request)
+    {
+        if (!$this->isValidAction('saveNewSelectItem', 'POST')) {
+            return response()->json(['errors' => 'requestNotAllowed'], 422);
+        }
+
+        $validatedData = $request->validate([
+            'select_item_id' => 'required',
+            'select_name' => 'required',
+        ], [
+            'select_item_id.required' => 'آیتم به درستی انتخاب نشده است',
+            'select_name.required' => 'نام نتیجه را وارد کنید'
+        ]);    
+        
+        $currentUser = auth()->user();
+        $DepartmentUser = DepartmentUser::where('user_id',$currentUser->id)->first();
+        $departmentId = $DepartmentUser->department_id ?? 0;
+
+        $Projects = new Project;
+        $Projects->pid = $request->select_item_id;
+        $Projects->department_id = $departmentId;
+        $Projects->name = $request->select_name;
+        $Projects->save();  
+        
+        return response()->json([], 200); 
+
+    }    
+
+    public function deleteProject(Request $request)
+    {
+        if (!$this->isValidAction('deleteProject', 'DELETE')) {
+            return response()->json(['errors' => 'requestNotAllowed'], 422);
+        }
+
+        $currentUser = auth()->user();
+        $DepartmentUser = DepartmentUser::where('user_id',$currentUser->id)->first();
+        $departmentId = $DepartmentUser->department_id ?? 0;
+        
+        $Project = Project::where([['department_id',$departmentId],['id',$request->id ?? 0]])->delete();
+
+        if ($Project === 1) {
+            return response()->json([], 200); 
+        } else {
+            return response()->json(['errors' => 'شما اجازه حذف این پروژه را ندارید'], 422); 
+        }        
+    }
+
+    public function getSetting(Request $request)
+    {
+        if (!$this->isValidAction('getSetting', 'GET')) {
+            return response()->json(['errors' => 'requestNotAllowed'], 422);
+        }
+        
+        $currentUser = auth()->user();
+        $DepartmentUser = DepartmentUser::where('user_id',$currentUser->id)->first();
+        $departmentId = $DepartmentUser->department_id ?? 0;
+
+        $Projects = Project::where([['department_id',$departmentId],['pid',null]])->get();
+        $selectedItem = Project::where([['department_id',$departmentId],['result_type','select'],['pid',null]])->get();
+
+        return response()->json(['Projects' => $Projects,'selectedItem'=>$selectedItem], 200); 
+    }
+
+    public function saveNewProject(Request $request)
+    {
+        if (!$this->isValidAction('saveNewProject', 'POST')) {
+            return response()->json(['errors' => 'requestNotAllowed'], 422);
+        }
+        
+        $validatedData = $request->validate([
+            'project_name' => 'required',
+            'project_result' => 'required',
+        ], [
+            'name.required' => 'عنوان پروژه الزامی است',
+            'project_result.required' => 'نوع خروجی پروژه الزامی است'
+        ]); 
+
+        $currentUser = auth()->user();
+        $DepartmentUser = DepartmentUser::where('user_id',$currentUser->id)->first();
+        $departmentId = $DepartmentUser->department_id ?? 0;
+
+        $Projects = new Project;
+        $Projects->department_id = $departmentId;
+        $Projects->name = $request->project_name;
+        $Projects->result_type = $request->project_result;
+        $Projects->save();
+
+        return response()->json([], 200); 
     }
 
     public function getStatistics(Request $request)
@@ -370,7 +484,7 @@ class WorkReportController extends Controller
         $p = $point;
         foreach ($bestSendNews as $key => $value) {
             $username = $value->employee->username;
-            $rankedUsers['کاربر '.$username] = ($rankedUsers['کاربر '.$username] ?? 0) + (($p--)*3);
+            $rankedUsers['کاربر '.$username] = ($rankedUsers['کاربر '.$username] ?? 0) + (($p--)*10);
         }  
         $p = $point;
         foreach ($bestWriteBulltan as $key => $value) {
@@ -390,7 +504,7 @@ class WorkReportController extends Controller
         $p = $point;
         foreach ($bestTranslate as $key => $value) {
             $username = $value->employee->username;
-            $rankedUsers['کاربر '.$username] = ($rankedUsers['کاربر '.$username] ?? 0) + (($p--)*1);
+            $rankedUsers['کاربر '.$username] = ($rankedUsers['کاربر '.$username] ?? 0) + (($p--)*0);
         }    
         $p = $point;
         foreach ($identification as $key => $value) {
@@ -1116,11 +1230,11 @@ class WorkReportController extends Controller
 
         $data = $request->validate([
             'employee_id' => 'required|exists:users,id',
-            'date' => 'required|date',
+            'date' => 'required',
             'start_time' => 'nullable',
             'end_time' => 'nullable',
             'description' => 'nullable|string',
-            'outcome' => 'nullable|string',
+            'outcome' => 'nullable',
             'project_task' => 'nullable|string',
             'location' => 'nullable|string',
         ]);
@@ -1161,7 +1275,7 @@ class WorkReportController extends Controller
 
             // اعتبارسنجی داده‌های فرم
             $validatedData = $request->validate([
-                'date'          => 'required|date',
+                'date'          => 'required',
                 'start_time'    => 'nullable|date_format:H:i',
                 'end_time'      => [
                     'nullable',
@@ -1169,7 +1283,7 @@ class WorkReportController extends Controller
                     // 'after_or_equal:start_time',
                 ],
                 'description'   => 'required|string',
-                'outcome'       => 'nullable|string',
+                'outcome'       => 'nullable',
                 'project_task'  => 'required|string',
                 'location'      => 'nullable|string',
             ]);
@@ -1186,12 +1300,67 @@ class WorkReportController extends Controller
             return response()->json('Success', 200);   
     }
 
+    private function isAdmin()
+    {
+        $currentUser = auth()->user();
+        return (DepartmentUser::where([['user_id',$currentUser->id],['job_position','like','admin']])->count() > 0) ? true : false;
+    }
+
+    public function getProjectItemsForShow($request)
+    {
+        if (!$this->isValidAction('getProjectForShow', 'GET')) {
+            return response()->json(['errors' => 'requestNotAllowed'], 422);
+        }
+
+        $currentUser = auth()->user();
+        $DepartmentUser = DepartmentUser::where('user_id',$currentUser->id)->first();
+        $departmentId = $DepartmentUser->department_id ?? 0;
+
+        $Project = Project::where([['department_id',$departmentId],['id',$request->id ?? 0]])->delete();
+
+        return response()->json(['projectShow'=>$projectShow], 200);   
+    }
+
+    public function getProjectForShow($request)
+    {
+        if (!$this->isValidAction('getProjectForShow', 'GET')) {
+            return response()->json(['errors' => 'requestNotAllowed'], 422);
+        }
+
+        $currentUser = auth()->user();
+        $DepartmentUser = DepartmentUser::where('user_id',$currentUser->id)->first();
+        $departmentId = $DepartmentUser->department_id ?? 0;
+
+        $projectShow = Project::where([['department_id',$departmentId],['pid', null],['name',$request->type == 'edit' ? $request->edit_project_task : $request->project_task]])->orderBy('sort', 'asc')->first();
+        if($projectShow->result_type == 'select')
+        {
+            $items = Project::where([['department_id',$departmentId],['pid',$projectShow->id ?? 0]])->get();
+        }
+        return response()->json(['projectShow'=>$projectShow,'items'=>$items ?? []], 200);   
+    }
+
+    public function getProjectsForShow($request)
+    {
+        if (!$this->isValidAction('getProjectsForShow', 'GET')) {
+            return response()->json(['errors' => 'requestNotAllowed'], 422);
+        }
+
+        $currentUser = auth()->user();
+        $DepartmentUser = DepartmentUser::where('user_id',$currentUser->id)->first();
+        $departmentId = $DepartmentUser->department_id ?? 0;
+
+        $Projects = Project::where([['department_id',$departmentId],['pid', null]])->orderBy('sort', 'asc')->get();
+
+        return response()->json(['Projects'=>$Projects], 200);   
+    }
     public function getWorkList($request)
     {
         if (!$this->isValidAction('getWorkList', 'GET')) {
             return response()->json(['errors' => 'requestNotAllowed'], 422);
         }
 
+        $isAdmin = $this->isAdmin();
+        
         $now = new Verta();
 
         $currentYear = $now->year;
@@ -1242,7 +1411,7 @@ class WorkReportController extends Controller
 
         $WorkList = $this->WorkReportRepository->Get($options,30);        
 
-        return response()->json(['WorkList' => $WorkList], 200);
+        return response()->json(['WorkList' => $WorkList , 'isAdmin'=>$isAdmin], 200);
 
     }
 

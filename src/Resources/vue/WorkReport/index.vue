@@ -9,12 +9,18 @@
                 <div class="navbar-nav me-auto">
                 </div>
                 <ul class="navbar-nav ms-lg-auto">
+                    <li class="nav-item" v-if="isAdmin">
+                        <a class=" btn btn-primary" @click="getSetting()" href="javascript:void(0);" data-bs-toggle="modal" data-toggle="modal" data-bs-target="#workReportSetting" data-target="#workReportSetting" style="margin-left: 10px;">
+                            <i class="fa fa-cogs navbar-icon menu-icon"></i>
+                            تنظیمات گزارش کار
+                        </a>
+                    </li>                 
                     <li class="nav-item">
                         <a class=" btn btn-primary" href="javascript:void(0);" data-bs-toggle="modal" data-toggle="modal" data-bs-target="#addNewTask" data-target="#addNewTask">
-                        <i class="fa fa-plus navbar-icon menu-icon"></i>
-                         افزودن گزارش کار
-                         </a>
-                    </li>
+                            <i class="fa fa-plus navbar-icon menu-icon"></i>
+                            افزودن گزارش کار
+                        </a>
+                    </li>                   
                 </ul>
             </div>
         </div>
@@ -226,7 +232,7 @@
                             </span>
                             <div class="timeline-event card p-0" data-aos="fade-right">
                                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
-                                    <h6 class="card-title mb-0 mt-n1">{{item.project_task}}</h6>
+                                    <h6 class="card-title mb-0 mt-n1">{{item.project_task}} <small v-if="item.outcome">({{item.outcome}})</small></h6>
                                     <div class="meta primary-font mt-n1">
                                         <span class="badge rounded-pill bg-label-primary">{{item.start_time}}</span>
                                         <span class="badge rounded-pill bg-label-success">{{item.end_time}}</span>
@@ -245,6 +251,7 @@
                                         edit_outcome=item.outcome;
                                         edit_project_task=item.project_task;
                                         selectedOption = isValueInArray(item.project_task);
+                                        getProjectForShow('edit');
                                         edit_location=item.location;" data-bs-toggle="modal" data-toggle="modal" data-bs-target="#editNewTask" data-target="#editNewTask">
                                         <i class="fa fa-edit"></i>
                                     </button>                            
@@ -278,6 +285,98 @@
         </div>        
     </div>
 
+    <div class="modal fade" id="workReportSetting" tabindex="-1" aria-labelledby="workReportSettingLabel" style="display: none;" aria-hidden="false">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="workReportSettingLabel">تنظیمات گزارش کار</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" id="TabSetting" role="TabSetting">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="project-tab" data-bs-toggle="tab" data-bs-target="#project_tab" type="button" role="tab" aria-controls="project_tab" aria-selected="true">پروژه‌ها</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="select-tab" data-bs-toggle="tab" data-bs-target="#select_tab" type="button" role="tab" aria-controls="select_tab" aria-selected="false">مدیریت انتخابی</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="myTabContent">
+                        <div class="tab-pane fade show active" id="project_tab" role="tabpanel" aria-labelledby="select_tab">
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <input class="form-control" v-model="project_name" placeholder="عنوان پروژه را وارد کنید">
+                                </div>
+                                <div class="col-sm-4">
+                                    <select class="form-control" v-model="project_result">
+                                        <option value="notUsed">بدون خروجی</option>
+                                        <option value="int">عددی</option>
+                                        <option value="text">متنی</option>
+                                        <option value="select">انتخابی</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-2">
+                                    <button class="btn btn-primary" @click="saveNewProject()"><i class="fa fa-save"></i></button>
+                                </div>
+                                <div class="col-sm-12">
+                                    <table class="table table-striped table-hover table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">عنوان پروژه</th>
+                                                <th scope="col">نوع نتیجه</th>
+                                                <th scope="col">ویرایش</th>
+                                                <th scope="col">حذف</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="item in projects">
+                                                <th scope="row">{{item.name}}</th>
+                                                <td>{{translateText(item.result_type)}}</td>
+                                                <td></td>
+                                                <td><button class="btn btn-danger" @click="deleteProject(item.id)"><i class="fa fa-trash"></i></button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="select_tab" role="tabpanel" aria-labelledby="select_tab">
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <select class="form-control" v-model="select_item_id">
+                                        <option v-for="item in selectedItem" :value="item.id">{{item.name}}</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-2">
+                                    <button class="btn btn-primary" @click="getSelectItem()"><i class="fa fa-search"></i></button>
+                                </div>                                 
+                                <div class="col-sm-4">
+                                    <input class="form-control" v-model="select_name" placeholder="عنوان نتیجه را وارد کنید">
+                                </div>
+                                <div class="col-sm-2">
+                                    <button class="btn btn-primary" @click="saveNewSelectItem()"><i class="fa fa-save"></i></button>
+                                </div>  
+                                <div class="col-sm-12">
+                                    <table class="table table-striped table-hover table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">عنوان</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="item in subSelectItem">
+                                                <td scope="row">{{item.name}}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>                                                  
+                            </div>                    
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="modal fade" id="addNewTask" tabindex="-1" aria-labelledby="addNewTaskLabel" style="display: none;" aria-hidden="false">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
@@ -296,17 +395,8 @@
                         <div class="col-sm-12 col-md-6">  
                             <div class="form-group">
                                 <label for="project_task">پروژه</label>
-                                <select class="form-select" v-model="project_task" aria-label="Default select example">
-                                    <option value="سوژه‌یابی">سوژه‌یابی</option>
-                                    <option value="شناسایی">شناسایی</option>
-                                    <option value="مستندسازی">مستندسازی</option>
-                                    <option value="ارسال خبرنامه">ارسال خبرنامه (بولتن)</option>
-                                    <option value="ارسال خبر">ارسال خبر</option>
-                                    <option value="ارسال بصر">ارسال بصر</option>
-                                    <option value="برنامه نویسی">برنامه نویسی</option>                                                
-                                    <option value="آموزش">آموزش</option>    
-                                    <option value="ترجمه">ترجمه</option>                                                                                 
-                                    <option value="سایر">سایر</option>
+                                <select class="form-select" v-model="project_task" aria-label="Default select example" @change="getProjectForShow()">
+                                    <option v-for="item in projectsShow"  :value="item.name">{{item.name}}</option>
                                 </select>
                             </div>
                         </div>                        
@@ -328,12 +418,13 @@
                                 <textarea class="form-control" id="description" v-model="description" style="min-height:150px;"></textarea>
                             </div>
                         </div>
-                        <div class="col-sm-12 col-md-12">  
+                        <div class="col-sm-12 col-md-12" v-if="projectShow.result_type != 'notUsed'">  
                             <div class="form-group">
                                 <label for="outcome">نتیجه</label>
-                                <input v-if="project_task != 'ارسال خبرنامه'" class="form-control" id="outcome" v-model="outcome">
-                                <select class="form-select" v-else v-model="outcome" @change="handleOptionChange" aria-label="Default select example">
-                                    <option v-for="item in Newsletter" :value="item.type">{{item.type}}</option>
+                                <input type="number" placeholder="تعداد را وارد کنید" v-model="outcome" class="form-control" v-if="projectShow.result_type == 'int'">
+                                <input type="text" placeholder="متن را وارد کنید" v-model="outcome" class="form-control" v-if="projectShow.result_type == 'text'">
+                                <select class="form-select" v-model="outcome" @change="handleOptionChange" aria-label="Default select example" v-if="projectShow.result_type == 'select'">
+                                    <option v-for="item in projectItemShow" :value="item.name">{{item.name}}</option>
                                 </select>                                             
                             </div>
                         </div> 
@@ -372,17 +463,8 @@
                         <div class="col-sm-12 col-md-6">  
                             <div class="form-group">
                                 <label for="project_task">پروژه</label>
-                                <select class="form-select" v-model="edit_project_task" aria-label="Default select example">
-                                    <option value="سوژه‌یابی">سوژه‌یابی</option>
-                                    <option value="شناسایی">شناسایی</option>
-                                    <option value="مستندسازی">مستندسازی</option>
-                                    <option value="ارسال خبرنامه">ارسال خبرنامه (بولتن)</option>
-                                    <option value="ارسال خبر">ارسال خبر</option>
-                                    <option value="ارسال بصر">ارسال بصر</option>
-                                    <option value="برنامه نویسی">برنامه نویسی</option>
-                                    <option value="آموزش">آموزش</option> 
-                                    <option value="ترجمه">ترجمه</option>                                                                                 
-                                    <option value="سایر">سایر</option>
+                                <select class="form-select" v-model="edit_project_task" aria-label="Default select example" @change="getProjectForShow('edit')">
+                                    <option v-for="item in projectsShow"  :value="item.name">{{item.name}}</option>
                                 </select>
                             </div>
                         </div>                        
@@ -404,15 +486,16 @@
                                 <textarea class="form-control" id="edit_description" v-model="edit_description" style="min-height:150px;"></textarea>
                             </div>
                         </div>
-                        <div class="col-sm-12 col-md-12">  
+                        <div class="col-sm-12 col-md-12" v-if="projectShow.result_type == 'int' || projectShow.result_type == 'text' || projectShow.result_type == 'select'">  
                             <div class="form-group">
-                                <label for="edit_outcome">نتیجه</label>
-                                <input class="form-control"  v-if="project_task != 'ارسال خبرنامه'" id="edit_outcome" v-model="edit_outcome">
-                                <select class="form-select" v-else v-model="edit_outcome" @change="handleOptionChange" aria-label="Default select example">
-                                    <option v-for="item in Newsletter" :value="item.type">{{item.type}}</option>
+                                <label for="outcome">نتیجه</label>
+                                <input type="number" placeholder="تعداد را وارد کنید" v-model="edit_outcome" class="form-control" v-if="projectShow.result_type == 'int'">
+                                <input type="text" placeholder="متن را وارد کنید" v-model="edit_outcome" class="form-control" v-if="projectShow.result_type == 'text'">
+                                <select class="form-select" v-model="edit_outcome" @change="handleOptionChange" aria-label="Default select example" v-if="projectShow.result_type == 'select'">
+                                    <option v-for="item in projectItemShow" :value="item.name">{{item.name}}</option>
                                 </select>                                             
                             </div>
-                        </div> 
+                        </div>                        
                         <div class="col-sm-12 col-md-8"></div>
 
                         <div class="col-sm-12 col-md-2">  
@@ -493,16 +576,217 @@ export default {
             date_end:'',
             project_task_search:'',
             identification:0,
-            allidentification:0
+            allidentification:0,
+            projects:[],
+            selectedItem:[],
+            subSelectItem:[],
+            project_name:'',
+            project_result:'notUsed',
+            result_name:'',
+            select_item_id:'',
+            select_name:'',
+            isAdmin:false,
+            projectsShow:[],
+            projectShow:[],
+            projectItemShow:[],
         }
     },
     components: {  },  
     mounted() {
+        this.getProjectsForShow();
         this.getWorkList();
         this.getNewsletter();
         this.getUserStatistics();
     },
     methods: {  
+        deleteProject(id)
+        {
+            Swal.fire({
+                title: 'آیا اطمینان دارید؟',
+                text: "این پروژه حذف خواهد شد!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'بله، حذف کن!',
+                cancelButtonText: 'لغو'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    axios.get(this.getAppUrl() + 'sanctum/getToken').then(response => {
+                        const token = response.data.token;
+                        const action = 'deleteProject';
+                        axios.request({
+                            method: 'DELETE', // از PUT برای ویرایش استفاده می‌کنیم
+                            url: this.getAppUrl() + 'api/user/WorkReport',
+                            headers: {'Authorization': `Bearer ${token}`},
+                            data: { action, id }
+                        }).then(response => {
+                            Swal.fire(
+                                'حذف شد!',
+                                'پروژه با موفقیت حذف شد',
+                                'success'
+                            );
+                            this.getSetting();   
+                        }).catch(error => {
+                            this.checkError(error);
+                        });
+                    }).catch(error => {
+                        this.checkError(error);
+                    });
+                }
+            }); 
+        },
+        saveNewSelectItem() {
+            axios.get(this.getAppUrl() + 'sanctum/getToken').then(response => {
+                
+                const token = response.data.token;
+                const select_item_id = this.select_item_id
+                const select_name = this.select_name;
+                const action = 'saveNewSelectItem'; 
+
+                axios.request({
+                    method: 'POST',
+                    url: this.getAppUrl() + 'api/user/WorkReport',
+                    headers: {'Authorization': `Bearer ${token}`},
+                    data: { select_item_id, select_name , action }
+                }).then(response => {
+                    this.select_name = "";
+                    Swal.fire(
+                        'اضافه شد!',
+                        'آیتم با موفقیت اضافه شد',
+                        'success'
+                    );   
+                    
+                    this.getSelectItem();   
+                }).catch(error => {
+                    this.checkError(error);
+                });        
+            }).catch(error => {
+                this.checkError(error);
+            });
+        },        
+        saveNewProject() {
+            axios.get(this.getAppUrl() + 'sanctum/getToken').then(response => {
+                
+                const token = response.data.token;
+                const project_name = this.project_name
+                const project_result = this.project_result;
+                const action = 'saveNewProject'; 
+
+                axios.request({
+                    method: 'POST',
+                    url: this.getAppUrl() + 'api/user/WorkReport',
+                    headers: {'Authorization': `Bearer ${token}`},
+                    data: { project_name, project_result , action }
+                }).then(response => {
+                    this.project_name = ""
+                    this.project_result = "notUsed";
+                    Swal.fire(
+                        'اضافه شد!',
+                        'پروژه با موفقیت اضافه شد',
+                        'success'
+                    );   
+                    this.getSetting();   
+                }).catch(error => {
+                    this.checkError(error);
+                });        
+            }).catch(error => {
+                this.checkError(error);
+            });
+        }, 
+        getProjectForShow(type='')
+        {
+            axios.get(this.getAppUrl() + 'sanctum/getToken').then(response => {
+                const token = response.data.token;
+                
+                axios.request({
+                    method: 'GET',
+                    url: this.getAppUrl() + 'api/user/WorkReport?action=getProjectForShow&type='+type+'&edit_project_task='+this.edit_project_task+'&project_task='+this.project_task,
+                    headers: {'Authorization': `Bearer ${token}`}
+                }).then(response => {
+                    this.projectShow = response.data.projectShow;   
+                    this.projectItemShow = response.data.items;   
+                }).catch(error => {
+                    this.checkError(error);
+                });
+            }).catch(error => {
+                this.checkError(error);
+            }); 
+        },
+        getProjectItemsForShow()
+        {
+            axios.get(this.getAppUrl() + 'sanctum/getToken').then(response => {
+                const token = response.data.token;
+
+                axios.request({
+                    method: 'GET',
+                    url: this.getAppUrl() + 'api/user/WorkReport?action=getProjectItemsForShow&id='+this.projectShow.id,
+                    headers: {'Authorization': `Bearer ${token}`}
+                }).then(response => {
+                    this.projectItemShow = response.data.projectShow;   
+                }).catch(error => {
+                    this.checkError(error);
+                });
+            }).catch(error => {
+                this.checkError(error);
+            }); 
+        },        
+        getProjectsForShow()
+        {
+            axios.get(this.getAppUrl() + 'sanctum/getToken').then(response => {
+                const token = response.data.token;
+
+                axios.request({
+                    method: 'GET',
+                    url: this.getAppUrl() + 'api/user/WorkReport?action=getProjectsForShow',
+                    headers: {'Authorization': `Bearer ${token}`}
+                }).then(response => {
+                    this.projectsShow = response.data.Projects;   
+                }).catch(error => {
+                    this.checkError(error);
+                });
+            }).catch(error => {
+                this.checkError(error);
+            });            
+        },                 
+        getSetting()
+        {
+            axios.get(this.getAppUrl() + 'sanctum/getToken').then(response => {
+                const token = response.data.token;
+
+                axios.request({
+                    method: 'GET',
+                    url: this.getAppUrl() + 'api/user/WorkReport?action=getSetting',
+                    headers: {'Authorization': `Bearer ${token}`}
+                }).then(response => {
+                    this.projects = response.data.Projects;   
+                    this.selectedItem = response.data.selectedItem;             
+                }).catch(error => {
+                    this.checkError(error);
+                });
+            }).catch(error => {
+                this.checkError(error);
+            });            
+        },
+        getSelectItem()
+        {
+            const id = this.select_item_id;
+            axios.get(this.getAppUrl() + 'sanctum/getToken').then(response => {
+                const token = response.data.token;
+
+                axios.request({
+                    method: 'GET',
+                    url: this.getAppUrl() + 'api/user/WorkReport?action=getSelectItem&id='+id,
+                    headers: {'Authorization': `Bearer ${token}`}
+                }).then(response => {
+                    this.subSelectItem = response.data.subSelectItem;             
+                }).catch(error => {
+                    this.checkError(error);
+                });
+            }).catch(error => {
+                this.checkError(error);
+            });            
+        },        
         runNewGet()
         {
             this.getWorkList(1);
@@ -588,9 +872,9 @@ export default {
             }
         },
         handleOptionChange() {
-            this.isReadOnly =  'readonly';
-            this.project_task = this.selectedOption;
-            this.edit_project_task = this.selectedOption;
+            //this.isReadOnly =  'readonly';
+            this.getSelectItem();
+            //this.edit_project_task = this.selectedOption;
         },        
         deleteWorkReport(id){
             Swal.fire({
@@ -715,6 +999,7 @@ export default {
                 }).then(response => {
                     this.fetchPagesDetails(response.data.WorkList);        
                     this.WorkList = response.data.WorkList.data;                
+                    this.isAdmin = response.data.isAdmin;                
                 }).catch(error => {
                     this.checkError(error);
                 });

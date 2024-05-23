@@ -70,54 +70,50 @@
       </nav>
     </div>     
   </div>
-  <div class="card app-calendar-wrapper" v-if="calendershow == true">
+  <div class="row" v-if="calendershow == true">
+    <div class="col-sm-12">
+      <button class="btn btn-warning btn-toggle-sidebar" v-if="taskId == 0" @click="calendershow=false">
+          <i class="bx bx-bell me-1"></i>
+          <span class="align-middle">
+            فهرست وظایف 
+            <span class="badge bg-white text-primary ms-1" v-if="todayTask > 0">{{todayTask}}</span>
+          </span>
+      </button> 
+      <button id="addEventSidebarBtn" class="btn btn-primary btn-toggle-sidebar" data-bs-toggle="offcanvas" data-bs-target="#addEventSidebar" aria-controls="addEventSidebar" v-if="taskId == 0" style="margin-right:5px">
+        <i class="bx bx-plus me-1"></i>
+        <span class="align-middle">افزودن وظیفه</span>
+      </button>   
+      <button @click="deleteTask()" class="btn btn-danger btn-toggle-sidebar" v-if="taskId != 0" style="min-width:160px">
+        <i class="bx bx-trash me-1"></i>
+        <span class="align-middle">حذف وظیفه</span>
+      </button>             
+      <button id="addEventSidebarBtn" class="btn btn-info btn-toggle-sidebar" data-bs-toggle="offcanvas" data-bs-target="#EditEventSidebar" aria-controls="EditEventSidebar" v-if="taskId != 0" style="margin-right:5px;min-width:160px;">
+        <i class="bx bx-edit me-1"></i>
+        <span class="align-middle">ویرایش وظیفه</span>
+      </button>  
+      <button @click="taskDone()" class="btn btn-success btn-toggle-sidebar" v-if="taskId != 0" style="margin-right:5px;min-width:160px;">
+        <i class="bx bx-check me-1"></i>
+        <span class="align-middle">انجام شد</span>
+      </button> 
+      <button id="addEventSidebarBtn" class="btn btn-danger btn-toggle-sidebar" v-if="taskId != 0" @click="taskId=0" style="margin-right:5px;min-width:160px;">
+        <i class="fa fa-close me-1"></i>
+        <span class="align-middle">انصراف</span>
+      </button>           
+    </div>
+    <div class="col-sm-12" v-if="Task.title && taskId != 0 && calendershow == true" >
+      <p>
+        <br>
+        <b>عنوان: <span style="color: blue;">{{ Task.title }}</span></b> 
+         - 
+        <b> توضیحات: <span style="color: blue;">{{ Task.description }}</span> </b> - 
+        <b> تمام روز: <span style="color: blue;">{{ Task.all_day ? 'بله' : 'خیر' }}</span></b> - 
+        <b> زمان: <small style="color: blue;">{{ Task.start_date }} از {{ Task.end_date }}</small></b> - 
+        <b> مکان: <span style="color: blue;">{{ Task.location }}</span></b> - 
+      </p>
+    </div>
+  </div>
+  <div class="card app-calendar-wrapper" v-if="calendershow == true" style="margin-top:12px">
     <div class="row g-0">
-      <div class="col app-calendar-sidebar" id="app-calendar-sidebar">
-        <div class="border-bottom p-4 my-sm-0 mb-3">
-          <div class="d-grid">
-            <button class="btn btn-warning btn-toggle-sidebar" v-if="taskId == 0" @click="calendershow=false">
-                <i class="bx bx-bell me-1"></i>
-                <span class="align-middle">فهرست وظایف</span>
-            </button>               
-            <button id="addEventSidebarBtn" class="btn btn-primary btn-toggle-sidebar mt-3" data-bs-toggle="offcanvas" data-bs-target="#addEventSidebar" aria-controls="addEventSidebar" v-if="taskId == 0">
-                <i class="bx bx-plus me-1"></i>
-                <span class="align-middle">افزودن وظیفه</span>
-            </button>         
-            <button @click="deleteTask()" class="btn btn-danger btn-toggle-sidebar mt-3" v-if="taskId != 0">
-                <i class="bx bx-trash me-1"></i>
-                <span class="align-middle">حذف وظیفه</span>
-            </button>             
-            <button id="addEventSidebarBtn" class="btn btn-info btn-toggle-sidebar mt-3" data-bs-toggle="offcanvas" data-bs-target="#EditEventSidebar" aria-controls="EditEventSidebar" v-if="taskId != 0">
-                <i class="bx bx-edit me-1"></i>
-                <span class="align-middle">ویرایش وظیفه</span>
-            </button>  
-            <button @click="taskDone()" class="btn btn-success btn-toggle-sidebar mt-3" v-if="taskId != 0">
-                <i class="bx bx-check me-1"></i>
-                <span class="align-middle">انجام شد</span>
-            </button> 
-            <button id="addEventSidebarBtn" class="btn btn-danger btn-toggle-sidebar mt-3" v-if="taskId != 0" @click="taskId=0">
-                <i class="fa fa-close me-1"></i>
-                <span class="align-middle">انصراف</span>
-            </button>                       
-          </div>
-        </div>
-        <div class="border-bottom p-4 my-sm-0 mb-3" v-if="Task.title && taskId != 0">
-          <div class="d-grid" >
-            <b>عنوان: </b> <span style="color: blue;">{{ Task.title }}</span>
-            <b>زمان: </b><small style="color: blue;">{{ Task.start_date }} از {{ Task.end_date }}</small>
-            <b>توضیحات: </b> <span style="color: blue;">{{ Task.description }}</span>
-            <b>مکان: </b> <span style="color: blue;">{{ Task.location }}</span>
-            <b>تمام روز: </b> <span style="color: blue;">{{ Task.all_day ? 'بله' : 'خیر' }}</span>
-          </div>
-        </div>
-        <div class="border-bottom p-4 my-sm-0">
-          <h5 style="text-align: center">راهنمای رنگ‌ها</h5>
-          <h6 style="background-color: #FFFF00;text-align: center">عادی</h6>
-          <h6 style="background-color: #FFA500;text-align: center">متوسط</h6>
-          <h6 style="background-color: #FF0000;text-align: center">مهم</h6>
-          <h6 style="background-color: #B87333;text-align: center">خیلی مهم</h6>
-        </div>
-      </div>
       <div class="col app-calendar-content">
         <div class="card shadow-none border-0">
           <div class="card-body pb-0">
@@ -259,8 +255,10 @@
   </div>
   </template>
   <script>
-  import FullCalendar from '@fullcalendar/vue3'
-  import dayGridPlugin from '@fullcalendar/daygrid'
+  import FullCalendar from '@fullcalendar/vue3';
+  import dayGridPlugin from '@fullcalendar/daygrid';
+  import timeGridPlugin from '@fullcalendar/timegrid';
+  import interactionPlugin from '@fullcalendar/interaction';
   import persian from '@fullcalendar/core/locales/fa';
   import Swal from 'sweetalert2';
   import moment from "jalali-moment";
@@ -273,11 +271,28 @@
 
         calendarOptions: {
           locale: persian,
-          plugins: [dayGridPlugin],
+          plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
           initialView: 'dayGridMonth',
+          headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+          },          
+          hiddenDays: [5],
           weekends: true,
           // editable: true,
           events: [],
+          eventTimeFormat: { // Format options for displaying time in events
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          },
+          slotLabelFormat: {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          },
+          allDaySlot: false,          
           eventClick: function(info) {
             this.getTask(info.event.id);
           }.bind(this)        
@@ -320,6 +335,7 @@
         itemsPerPage:20,   
         
         task_status:'',
+        todayTask:0,
       }
     },
     components: {
@@ -520,7 +536,7 @@
               url: this.getAppUrl() + 'api/user/tasks?action=getTask&id='+id,
               headers: {'Authorization': `Bearer ${token}`}
           }).then(response => {
-              this.Task = response.data.Task;  
+            this.Task = response.data.Task;  
             this.eventTitleEdit = this.Task.title;
             this.eventLevelEdit = this.Task.level;
             this.eventStartDateEdit = this.Task.start_date;
@@ -534,51 +550,77 @@
         }).catch(error => {
             this.checkError(error);
         });
-      },    
-      getTasksInProgress() {
-          axios.get(this.getAppUrl() + 'sanctum/getToken')
-              .then(response => {
-                  const token = response.data.token;
+      }, 
+      calculateDaysDifference(startDate, endDate) {
+        const oneDay = 24 * 60 * 60 * 1000; // یک روز به میلی‌ثانیه
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const differenceMs = Math.abs(end - start);
+        const differenceDays = Math.round(differenceMs / oneDay);
+        return differenceDays;
+      },         
+getTasksInProgress() {
+    axios.get(this.getAppUrl() + 'sanctum/getToken')
+        .then(response => {
+            const token = response.data.token;
 
-                  axios.request({
-                      method: 'GET',
-                      url: this.getAppUrl() + 'api/user/tasks?action=getTasksInProgress',
-                      headers: { 'Authorization': `Bearer ${token}` }
-                  }).then(response => {
-                      this.isAdmin = response.data.isAdmin;
-                      const tasksInProgress = response.data.TasksInProgress;
+            axios.request({
+                method: 'GET',
+                url: this.getAppUrl() + 'api/user/tasks?action=getTasksInProgress',
+                headers: { 'Authorization': `Bearer ${token}` }
+            }).then(response => {
+                this.isAdmin = response.data.isAdmin;
+                const tasksInProgress = response.data.TasksInProgress;
+                this.todayTask = response.data.todayTask;
 
-                      const events = tasksInProgress.map(task => ({
-                          id: task.id,
-                          title: ' - ' + task.employee.username + ': ' + task.title,
-                          start: new Date(task.start_date), // Assuming start date is current date
-                          end: new Date(task.end_date), // Example end date
-                          backgroundColor:this.FullCalendarbackgroundColor(task.level),
-                          textColor :'#000000'
-                      }));
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // تنظیم ساعت به 00:00:00:000 برای مقایسه فقط تاریخ
 
-                      this.calendarOptions.events = events;
-                  }).catch(error => {
-                      this.checkError(error);
-                  });
-              }).catch(error => {
-                  this.checkError(error);
-              });
-      },
+                const events = tasksInProgress.map(task => {
+                    const startDate = new Date(task.start_date);
+                    let endDate = new Date(task.end_date);
+                    // اگر تاریخ پایان کمتر از امروز است، آن را به امروز تغییر دهید
+                    let dayDiffTitle = ""
+                    if (endDate < today) {
+                        const differenceDays = this.calculateDaysDifference(endDate,today)
+                        dayDiffTitle = differenceDays.toString() + ' - ';
+                        endDate = today;
+                        today.setHours(23, 59, 59, 0);
+                    }
+      
+                    return {
+                        id: task.id,
+                        title: ' - ' + dayDiffTitle + task.employee.username + ' - ' + task.title,
+                        start: startDate,
+                        end: endDate,
+                        backgroundColor: this.FullCalendarbackgroundColor(task.level),
+                        textColor: '#000000'
+                    };
+                });
+
+                this.calendarOptions.events = events;
+            }).catch(error => {
+                this.checkError(error);
+            });
+        }).catch(error => {
+            this.checkError(error);
+        });
+},
+
       FullCalendarbackgroundColor(level)
       {
         switch (level) {
           case "1":
-            return '#FFA500';
+            return '#FFFFE0';
             break;
           case "2":
-            return '#FF0000';
+            return '#FFD580';
             break;  
           case "3":
-            return '#B87333';
+            return '#FF7F7F';
             break;                  
           default:
-            return '#FFFF00';
+            return '#90EE90';
             break;
         }
       },

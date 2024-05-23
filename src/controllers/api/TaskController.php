@@ -141,7 +141,7 @@ class TaskController extends Controller
             return response()->json(['errors' => 'شما اجازه ویرایش این وظیفه را ندارید'], 422); 
         }
 
-        $timestamp1 = strtotime($date);
+        $timestamp1 = strtotime($request->eventStartDate);
         $timestamp2 = strtotime($request->eventEndDate);
         $date_only1 = date("Y-m-d", $timestamp1);
         $date_only2 = date("Y-m-d", $timestamp2);
@@ -271,14 +271,23 @@ class TaskController extends Controller
             $DepartmentUser = DepartmentUser::where('user_id',$currentUser->id)->first();
             $Employees = DepartmentUser::where('department_id',$DepartmentUser->department_id )->pluck('user_id'); 
             $TasksInProgress = Task::where([['status','like','InProgress']])->whereIn('employee_id',$Employees);
+            $todayTask = Task::where([['status','like','InProgress']])
+            ->whereIn('employee_id',$Employees)
+            ->whereDate('start_date', '<=', now()->toDateString())
+            ->whereDate('end_date', '>=', now()->toDateString())
+            ->count();
         }
         else
         {
             $TasksInProgress = Task::where([['employee_id',$currentUser->id],['status','like','InProgress']]);
+            $todayTask = Task::where([['employee_id',$currentUser->id],['status','like','InProgress']])
+            ->whereDate('start_date', '<=', now()->toDateString())
+            ->whereDate('end_date', '>=', now()->toDateString())
+            ->count();            
         }
         
         $TasksInProgress = $TasksInProgress->with(['employee:id,username'])->get();
-        return response()->json(['TasksInProgress'=>$TasksInProgress,'isAdmin'=>$isAdmin], 200);       
+        return response()->json(['TasksInProgress'=>$TasksInProgress,'isAdmin'=>$isAdmin,'todayTask'=>$todayTask], 200);       
     }
 
     public function saveNewTask($request)
