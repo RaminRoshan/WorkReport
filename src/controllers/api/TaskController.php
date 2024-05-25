@@ -10,15 +10,16 @@ use Pishgaman\WorkReport\Database\Models\Task;
 use Pishgaman\Pishgaman\Database\Models\User\User;
 use Pishgaman\Pishgaman\Database\Models\Department\DepartmentUser;
 use Hekmatinasser\Verta\Verta;
+use Pishgaman\Pishgaman\Library\mpdf\MpdfInterface;
 
 class TaskController extends Controller
 {
     private $validActions = [
-        'saveNewTask' , 'getTasksInProgress' , 'getTask' , 'taskDone' , 'deleteTask' , 'saveEditTask' , 'getTasks'
+        'saveNewTask' , 'getTasksInProgress' , 'getTask' , 'taskDone' , 'deleteTask' , 'saveEditTask' , 'getTasks' , 'getPdfTask'
     ];
 
     protected $validMethods = [
-        'GET' => ['getTasksInProgress','getTask','getTasks'], // Added 'createAccessLevel' as a valid method-action pair
+        'GET' => ['getTasksInProgress','getTask','getTasks' , 'getPdfTask'], // Added 'createAccessLevel' as a valid method-action pair
         'POST' => ['saveNewTask'], // Added 'createAccessLevel' as a valid action for POST method
         'PUT' => ['taskDone','saveEditTask'],
         'DELETE' => ['deleteTask']
@@ -60,6 +61,92 @@ class TaskController extends Controller
     {
         $currentUser = auth()->user();
         return (DepartmentUser::where([['user_id',$currentUser->id],['job_position','like','admin']])->count() > 0) ? true : false;
+    }
+
+    public function getPdfTask()
+    {
+        if (!$this->isValidAction('getPdfTask', 'GET')) {
+            return response()->json(['errors' => 'requestNotAllowed'], 422);
+        }
+    
+        $currentUser = auth()->user();
+        $isAdmin = $this->isAdmin();
+    
+        if ($isAdmin) {
+            $departmentUser = DepartmentUser::where('user_id', $currentUser->id)->first();
+            $employees = DepartmentUser::where('department_id', $departmentUser->department_id)->pluck('user_id')->toArray();
+            $tasks = Task::whereIn('employee_id', $employees);
+        } else {
+            $tasks = Task::where('employee_id', $currentUser->id);
+        }
+    
+        if($request->status ?? false)
+        {
+            if($request->status == 'DelayToDo')
+            {
+                $tasks = $tasks->where('status','InProgress');
+                $tasks = $tasks->whereDate('end_date', '<', now());
+            }
+            else if($request->status == 'lock')
+            {
+                $tasks = $tasks->where('lock','1');
+            }
+            else
+            {
+                $tasks = $tasks->where('status',$request->status);
+            }
+        }
+
+        $tasks = $tasks->orderBy('start_date')->with('employee:id,username')->orderBy('employee_id', 'desc')->orderBy('start_date', 'desc')->with(['employee:id,username'])->get();
+
+        $style_title = '
+            <link href="'.url('plugin/fonts/fonts.css').'" rel="stylesheet" />
+            <style> @page{} body{direction: rtl;} h2,h1,p{font-size:14px;} a{text-decoration: none;} .basar{height: 25px;}</style>
+        ';
+        $html = '';
+        $start_html = "<html><head>" . $style_title . '</head><body>';
+        foreach ($tasks as $key => $value) {
+            $employee = "";
+            if ($isAdmin) {
+                $employee = $value->employee->username . ' - ' ;
+            }
+            $html = $html . '<h1>'.($key + 1) . ') ' . $employee . $value->title.' <small>('.$this->setLevel($value->level).')</small></h1>';
+            $html = $html . '<p>'.$value->description.'</p>';
+            $html = $html . '<table><tr><td><b>تاریخ شروع:</b></td><td>'.$value->start_date.'</td><td><b>تاریخ پایان:</b></td><td>'.$value->end_date.'</td></tr><tr><td><b>تاریخ انجام:</b></td><td>'.$value->done_at.'</td><td><b>مکان اجرا:</b> </td><td>'.$value->location.'</td></tr></table><hr>';
+        }
+        $end_html = '</body></html>';
+
+        $task_html = $start_html . $html . $end_html;
+        $Mpdf = \App::make(MpdfInterface::class);
+        $Mpdf_1 = $Mpdf->init('utf-8','fullpage','A4-p');
+        $Mpdf->setTitle($Mpdf_1,'گزارش وظایف');
+        $Mpdf->WriteHTML($Mpdf_1,$task_html);
+        $path = base_path() . '/public/media/Task/PDF/'.$currentUser->username.'.pdf';
+        $Mpdf->save($Mpdf_1,$path);
+        
+        return response()->json(['download_link' => url('media/Task/PDF/'.$currentUser->username.'.pdf')], 200);
+    }
+
+    public function setLevel($level)
+    {
+        if (!$this->isValidAction('getTasks', 'GET')) {
+            return response()->json(['errors' => 'requestNotAllowed'], 422);
+        }
+
+        switch ($level) {
+            case '1':
+                return 'متوسط';
+                break;
+            case '2':
+                return 'مهم';
+                break;
+            case '3':
+                return 'خیلی مهم';
+                break;                
+            default:
+                return 'عادی';
+                break;
+        }
     }
 
     public function getTasks(Request $request)

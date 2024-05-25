@@ -17,11 +17,38 @@
         <option value="lock">ثبت شده توسط مدیر</option>
       </select>
     </div>
-    <div class="col-sm-12 col-md-1">
-      <button class="btn btn-primary btn-sm mt-2 btn-toggle-sidebar" v-if="taskId == 0" @click="getTasks(1)">
-        <i class="fa fa-search me-1"></i>
+    <div class="col-sm-12 col-md-2">
+      <button class="btn btn-primary btn-sm mt-2 btn-toggle-sidebar" v-if="taskId == 0" @click="getTasks(1)" title="ایجاد فیلتر از گزارش">
+        <i class="fa fa-search" style="font-size:14px"></i>
       </button> 
-    </div>    
+      <button class="btn btn-danger btn-sm mt-2 btn-toggle-sidebar" v-if="taskId == 0" @click="getPdfTask();linkActive=false" title="ایجاد فایل PDF" data-bs-toggle="modal" data-bs-target="#downloadPDF">
+        <i class="fa-solid fa-file-pdf" style="font-size:14px"></i>
+      </button>  
+      <div class="modal fade" id="downloadPDF" tabindex="-1" style="display: none;" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title secondary-font" id="exampleModalLabel1">دانلود</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="row">
+                <div class="col mb-12" v-if="linkActive">
+                  <a :href="download_link" target="blank"><i class="fa fa-download"></i> دانلود </a>
+                </div>
+                <div class="col mb-12" v-else>
+                  <p>
+                    <div class="spinner-grow text-info" role="status">
+                      <span class="visually-hidden">در حال بارگذاری ...</span>
+                    </div>
+                    درحال آماده سازی فایل، لطفا شکیبا باشید ...</p>             
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>           
+    </div>  
     <div class="col-sm-12 card mt-4 card">
       <table class="table">
         <thead>
@@ -253,6 +280,7 @@
       </div>
     </div>
   </div>
+  
   </template>
   <script>
   import FullCalendar from '@fullcalendar/vue3';
@@ -336,6 +364,9 @@
         
         task_status:'',
         todayTask:0,
+
+        linkActive:false,
+        download_link:'',
       }
     },
     components: {
@@ -347,6 +378,25 @@
     },
     methods:
     {
+      getPdfTask()
+      {
+        axios.get(this.getAppUrl() + 'sanctum/getToken').then(response => {
+          const token = response.data.token;
+          
+          axios.request({
+              method: 'GET',
+              url: this.getAppUrl() + 'api/user/tasks?action=getPdfTask&status='+this.task_status,
+              headers: {'Authorization': `Bearer ${token}`}
+          }).then(response => {
+            this.linkActive = true;  
+            this.download_link =  response.data.download_link;     
+          }).catch(error => {
+              this.checkError(error);
+          });
+        }).catch(error => {
+            this.checkError(error);
+        });
+      },
       getDateColor(end_date,start_date,status) {
         let today = new Date();
         
