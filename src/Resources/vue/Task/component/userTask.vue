@@ -1,29 +1,4 @@
 <template>
-  <div class="row " v-if="calendershow != true">
-    <div class="col-sm-12 col-md-2">
-      <div class="d-grid mt-2">
-        <button class="btn btn-warning btn-toggle-sidebar" v-if="taskId == 0" @click="calendershow=true">
-          <i class="fa fa-arrow-right me-1"></i>
-          <span class="align-middle">نمایش تقویم</span>
-        </button> 
-      </div>
-    </div>
-    <div class="col-sm-12 col-md-2">
-      <select class="form-control mt-2" v-model="task_status">
-        <option value="">همه</option>
-        <option value="taskDone">انجام شد</option>
-        <option value="InProgress">در جریان</option>
-        <option value="DelayToDo">تاخیر در انجام کار</option>
-        <option value="lock">ثبت شده توسط مدیر</option>
-      </select>
-    </div>
-    <div class="col-sm-12 col-md-2">
-      <button class="btn btn-primary btn-sm mt-2 btn-toggle-sidebar" v-if="taskId == 0" @click="getTasks(1)" title="ایجاد فیلتر از گزارش">
-        <i class="fa fa-search" style="font-size:14px"></i>
-      </button> 
-      <button class="btn btn-danger btn-sm mt-2 btn-toggle-sidebar" v-if="taskId == 0" @click="getPdfTask();linkActive=false" title="ایجاد فایل PDF" data-bs-toggle="modal" data-bs-target="#downloadPDF">
-        <i class="fa-solid fa-file-pdf" style="font-size:14px"></i>
-      </button>  
       <div class="modal fade" id="downloadPDF" tabindex="-1" style="display: none;" aria-hidden="true">
         <div class="modal-dialog" role="document">
           <div class="modal-content">
@@ -47,7 +22,38 @@
             </div>
           </div>
         </div>
-      </div>           
+      </div>
+  <div class="row " v-if="calendershow != true">
+    <div class="col-sm-12 col-md-2">
+      <div class="d-grid mt-2">
+        <button class="btn btn-warning btn-toggle-sidebar" v-if="taskId == 0" @click="calendershow=true">
+          <i class="fa fa-arrow-right me-1"></i>
+          <span class="align-middle">نمایش تقویم</span>
+        </button> 
+      </div>
+    </div>
+    <div class="col-sm-12 col-md-2">
+      <select class="form-control mt-2" v-model="task_status">
+        <option value="">همه</option>
+        <option value="taskDone">انجام شد</option>
+        <option value="InProgress">در جریان</option>
+        <option value="DelayToDo">تاخیر در انجام کار</option>
+        <option value="lock">ثبت شده توسط مدیر</option>
+      </select>
+    </div>
+    <div class="col-sm-12 col-md-2 mt-2">
+      <date-picker v-model="reportExportStart" placeholder="از"></date-picker>
+    </div> 
+    <div class="col-sm-12 col-md-2 mt-2">
+      <date-picker v-model="reportExportEnd" placeholder="تا" ></date-picker>
+    </div>        
+    <div class="col-sm-12 col-md-2">
+      <button class="btn btn-primary btn-sm mt-2 btn-toggle-sidebar" v-if="taskId == 0" @click="getTasks(1)" title="ایجاد فیلتر از گزارش">
+        <i class="fa fa-search" style="font-size:14px"></i>
+      </button> 
+      <button class="btn btn-info btn-sm mt-2 btn-toggle-sidebar" v-if="taskId == 0" @click="exportMonthlyReportWord();linkActive=false" title="ایجاد فایل PDF گزارش ماهانه" data-bs-toggle="modal" data-bs-target="#downloadPDF">
+        <i class="fa-solid fa-file-word" style="font-size:14px"></i>
+      </button>           
     </div>  
     <div class="col-sm-12 card mt-4 card">
       <table class="table">
@@ -98,7 +104,7 @@
     </div>     
   </div>
   <div class="row" v-if="calendershow == true">
-    <div class="col-sm-12">
+    <div class="col-sm-8">
       <button class="btn btn-warning btn-toggle-sidebar" v-if="taskId == 0" @click="calendershow=false">
           <i class="bx bx-bell me-1"></i>
           <span class="align-middle">
@@ -118,17 +124,22 @@
         <i class="bx bx-edit me-1"></i>
         <span class="align-middle">ویرایش وظیفه</span>
       </button>  
-      <button @click="taskDone()" class="btn btn-success btn-toggle-sidebar" v-if="taskId != 0" style="margin-right:5px;min-width:160px;">
-        <i class="bx bx-check me-1"></i>
-        <span class="align-middle">انجام شد</span>
-      </button> 
       <button id="addEventSidebarBtn" class="btn btn-danger btn-toggle-sidebar" v-if="taskId != 0" @click="taskId=0" style="margin-right:5px;min-width:160px;">
         <i class="fa fa-close me-1"></i>
         <span class="align-middle">انصراف</span>
       </button>           
     </div>
-    <div class="col-sm-12" v-if="Task.title && taskId != 0 && calendershow == true" >
-      <p>
+    <div class="col-sm-2">
+      <date-picker v-model="selectDateIn" disable="1403-01-17" placeholder="برای تغییر هفته روز را انتخاب کنید"></date-picker>
+    </div>
+    <div class="col-sm-2">
+      <button class="btn btn-primary" @click="getTasksInProgress()"><i class="fa fa-search"></i></button>
+      <button class="btn btn-info btn-toggle-sidebar" v-if="taskId == 0" @click="getTasksInProgressWord();linkActive=false" title="ایجاد فایل PDF گزارش هفتگی" data-bs-toggle="modal" data-bs-target="#downloadPDF">
+        <i class="fa-solid fa-file-word" style="font-size:14px"></i>
+      </button>        
+    </div>
+    <div class="col-sm-12" style="min-height:75px" >
+      <p v-if="Task.title && taskId != 0 && calendershow == true">
         <br>
         <b>عنوان: <span style="color: blue;">{{ Task.title }}</span></b> 
          - 
@@ -143,12 +154,161 @@
     <div class="row g-0">
       <div class="col app-calendar-content">
         <div class="card shadow-none border-0">
-          <div class="card-body pb-0">
-            <FullCalendar :options='calendarOptions' />
-          </div>
+          <table class="table table-bordered">
+            <thead>
+              <tr class="text-center table-secondary">
+                <th style="width:16.16%"><i v-if="delayTasks.length !== 0 && checkTodayGregorian(printDate(todayGregorian,0))" class="bx bx-bell me-1" style="color:red"></i> شنبه<br>{{firstDayOfWeek}}</th>
+                <th style="width:16.16%"><i v-if="delayTasks.length !== 0 && checkTodayGregorian(printDate(todayGregorian,1))" class="bx bx-bell me-1" style="color:red"></i> یکشنبه<br>{{printDate(firstDayOfWeek,1)}}</th>
+                <th style="width:16.16%"><i v-if="delayTasks.length !== 0 && checkTodayGregorian(printDate(todayGregorian,2))" class="bx bx-bell me-1" style="color:red"></i> دوشنبه<br>{{printDate(firstDayOfWeek,2)}}</th>
+                <th style="width:16.16%"><i v-if="delayTasks.length !== 0 && checkTodayGregorian(printDate(todayGregorian,3))" class="bx bx-bell me-1" style="color:red"></i> سه‌شنبه<br>{{printDate(firstDayOfWeek,3)}}</th>
+                <th style="width:16.16%"><i v-if="delayTasks.length !== 0 && checkTodayGregorian(printDate(todayGregorian,4))" class="bx bx-bell me-1" style="color:red"></i> چهارشنبه<br>{{printDate(firstDayOfWeek,4)}}</th>
+                <th style="width:16.16%"><i v-if="delayTasks.length !== 0 && checkTodayGregorian(printDate(todayGregorian,5))" class="bx bx-bell me-1" style="color:red"></i> پنجشنبه<br>{{printDate(firstDayOfWeek,5)}}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="min-height: 400px;display: block; text-align: right;vertical-align: top">
+                  <template v-for="item in TasksInProgress" :key="item.id">
+                    <div class="form-check" v-if="(todayGregorian == formatDate(item.start_date)) && checkTakhir(item)">
+                      <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :checked="item.done_at !== null" :disabled="item.done_at !== null">
+                      <label class="form-check-label" for="flexCheckDefault" @click="getTask(item.id)">
+                        {{item.title}}
+                      </label>
+                    </div>                  
+                  </template>
+                </td>
+                <td style="text-align: right;vertical-align: top">
+                  <template v-for="item in TasksInProgress" :key="item.id">
+                    <div class="form-check" v-if="(printDate(todayGregorian,1) == formatDate(item.start_date)) && checkTakhir(item)">
+                      <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :checked="item.done_at !== null" :disabled="item.done_at !== null">
+                      <label class="form-check-label" for="flexCheckDefault" @click="getTask(item.id)">
+                        {{item.title}}
+                      </label>
+                    </div>                   
+                  </template>              
+                </td>
+                <td style="text-align: right;vertical-align: top">
+                  <template v-for="item in TasksInProgress" :key="item.id">
+                    <div class="form-check" v-if="(printDate(todayGregorian,2) == formatDate(item.start_date)) && checkTakhir(item)">
+                      <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :checked="item.done_at !== null" :disabled="item.done_at !== null">
+                      <label class="form-check-label" for="flexCheckDefault" @click="getTask(item.id)">
+                        {{item.title}}
+                      </label>
+                    </div>                   
+                  </template>             
+                </td>
+                <td style="text-align: right;vertical-align: top">
+                  <template v-for="item in TasksInProgress" :key="item.id">
+                    <div class="form-check" v-if="(printDate(todayGregorian,3) == formatDate(item.start_date)) && checkTakhir(item)">
+                      <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :checked="item.done_at !== null" :disabled="item.done_at !== null">
+                      <label class="form-check-label" for="flexCheckDefault" @click="getTask(item.id)">
+                        {{item.title}}
+                      </label>
+                    </div>                   
+                  </template>            
+                </td>
+                <td style="text-align: right;vertical-align: top">
+                  <template v-for="item in TasksInProgress" :key="item.id">
+                    <div class="form-check" v-if="(printDate(todayGregorian,4) == formatDate(item.start_date)) && checkTakhir(item)">
+                      <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :checked="item.done_at !== null" :disabled="item.done_at !== null">
+                      <label class="form-check-label" for="flexCheckDefault" @click="getTask(item.id)">
+                        {{item.title}}
+                      </label>
+                    </div>                   
+                  </template>            
+                </td>
+                <td style="text-align: right;vertical-align: top">
+                  <template v-for="item in TasksInProgress" :key="item.id">
+                    <div class="form-check" v-if="(printDate(todayGregorian,5) == formatDate(item.start_date)) && checkTakhir(item)">
+                      <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :checked="item.done_at !== null" :disabled="item.done_at !== null">
+                      <label class="form-check-label" for="flexCheckDefault" @click="getTask(item.id)">
+                        {{item.title}}
+                      </label>
+                    </div>                   
+                  </template>             
+                </td>                                
+              </tr>
+            </tbody>
+            <tbody>
+              <tr class="table-danger">
+                <td style="min-height: 200px;display: block; text-align: right;vertical-align: top">
+                  <template v-if="checkTodayGregorian(printDate(todayGregorian,0))">
+                    <template v-for="item in delayTasks" :key="item.id">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :id="'id'+item.id">
+                        <label class="form-check-label" for="flexCheckDefault" @click="getTask(item.id)">
+                          {{printTakhirNum(item)}} - {{item.title}}
+                        </label>
+                      </div>                
+                    </template>
+                  </template>
+                </td>
+                <td style="text-align: right;vertical-align: top">
+                  <template v-if="checkTodayGregorian(printDate(todayGregorian,1))">
+                    <template v-for="item in delayTasks" :key="item.id">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :id="'id'+item.id">
+                        <label class="form-check-label" for="flexCheckDefault" @click="getTask(item.id)">
+                          {{printTakhirNum(item)}} - {{item.title}}
+                        </label>
+                      </div>               
+                    </template>
+                  </template>                
+                </td>
+                <td style="text-align: right;vertical-align: top">
+                  <template v-if="checkTodayGregorian(printDate(todayGregorian,2))">
+                    <template v-for="item in delayTasks" :key="item.id">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :id="'id'+item.id">
+                        <label class="form-check-label" for="flexCheckDefault" @click="getTask(item.id)">
+                          {{printTakhirNum(item)}} - {{item.title}}
+                        </label>
+                      </div>              
+                    </template>
+                  </template>                
+                </td>
+                <td style="text-align: right;vertical-align: top">
+                  <template v-if="checkTodayGregorian(printDate(todayGregorian,3))">
+                    <template v-for="item in delayTasks" :key="item.id">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :id="'id'+item.id">
+                        <label class="form-check-label" for="flexCheckDefault" @click="getTask(item.id)">
+                          {{printTakhirNum(item)}} - {{item.title}}
+                        </label>
+                      </div>             
+                    </template>
+                  </template>
+                </td>
+                <td style="text-align: right;vertical-align: top">
+                  <template v-if="checkTodayGregorian(printDate(todayGregorian,4))">
+                    <template v-for="item in delayTasks" :key="item.id">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :id="'id'+item.id">
+                        <label class="form-check-label" for="flexCheckDefault" @click="getTask(item.id)">
+                          {{printTakhirNum(item)}} - {{item.title}}
+                        </label>
+                      </div>               
+                    </template>
+                  </template>                
+                </td>
+                <td style="text-align: right;vertical-align: top">
+                  <template v-if="checkTodayGregorian(printDate(todayGregorian,5))">
+                    <template v-for="item in delayTasks" :key="item.id">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :id="'id'+item.id">
+                        <label class="form-check-label" for="flexCheckDefault" @click="getTask(item.id)">
+                          {{printTakhirNum(item)}} - {{item.title}}
+                        </label>
+                      </div>              
+                    </template>
+                  </template>
+                </td>
+              </tr>
+            </tbody>            
+          </table>
         </div>
       </div>
-    </div>
+    </div>     
   </div>
   <div class="offcanvas offcanvas-end event-sidebar" tabindex="-1" id="addEventSidebar" aria-labelledby="addEventSidebarLabel" aria-modal="true" role="dialog">
     <div class="offcanvas-header border-bottom">
@@ -178,35 +338,6 @@
         <label class="form-label" for="eventStartDate">تاریخ شروع</label>
         <date-picker v-model="eventStartDate" disable="1403-01-17"></date-picker>
         <div class="fv-plugins-message-container invalid-feedback"></div>
-      </div>
-      <div class="mb-3 fv-plugins-icon-container fv-plugins-bootstrap5-row-valid">
-        <label class="form-label" for="eventEndDate">تاریخ پایان</label>
-        <date-picker v-model="eventEndDate"></date-picker>
-        <div class="fv-plugins-message-container invalid-feedback"></div>
-      </div>
-      <div class="mb-3">
-        <label class="switch">
-          <input type="checkbox" class="switch-input allDay-switch" v-model="allDay">
-          <span class="switch-toggle-slider">
-            <span class="switch-on"></span>
-            <span class="switch-off"></span>
-          </span>
-          <span class="switch-label">تمام روز</span>
-        </label>
-      </div>
-      <div class="mb-3">
-        <label class="switch">
-          <input type="checkbox" class="switch-input allDay-switch" v-model="repTask">
-          <span class="switch-toggle-slider">
-            <span class="switch-on"></span>
-            <span class="switch-off"></span>
-          </span>
-          <span class="switch-label">تکرار در هر روز</span>
-        </label>
-      </div>      
-      <div class="mb-3">
-        <label class="form-label" for="eventLocation">مکان</label>
-        <input type="text" class="form-control" id="eventLocation" v-model="eventLocation" placeholder="موقعیت را وارد کنید">
       </div>
       <div class="mb-3">
         <label class="form-label" for="eventDescription">توضیحات</label>
@@ -248,25 +379,6 @@
         <label class="form-label" for="eventStartDate">تاریخ شروع</label>
         <date-picker v-model="eventStartDateEdit" disable="1403-01-17"></date-picker>
         <div class="fv-plugins-message-container invalid-feedback"></div>
-      </div>
-      <div class="mb-3 fv-plugins-icon-container fv-plugins-bootstrap5-row-valid">
-        <label class="form-label" for="eventEndDate">تاریخ پایان</label>
-        <date-picker v-model="eventEndDateEdit"></date-picker>
-        <div class="fv-plugins-message-container invalid-feedback"></div>
-      </div>
-      <div class="mb-3">
-        <label class="switch">
-          <input type="checkbox" class="switch-input allDay-switch" v-model="allDayEdit">
-          <span class="switch-toggle-slider">
-            <span class="switch-on"></span>
-            <span class="switch-off"></span>
-          </span>
-          <span class="switch-label">تمام روز</span>
-        </label>
-      </div>
-      <div class="mb-3">
-        <label class="form-label" for="eventLocation">مکان</label>
-        <input type="text" class="form-control" id="eventLocation" v-model="eventLocationEdit" placeholder="موقعیت را وارد کنید">
       </div>
       <div class="mb-3">
         <label class="form-label" for="eventDescription">توضیحات</label>
@@ -327,7 +439,7 @@
         },   
 
         eventTitle:'',
-        eventLevel:'',
+        eventLevel:0,
         eventStartDate:'',
         eventEndDate:'',
         allDay:'',
@@ -336,7 +448,7 @@
         eventDescription:'',
   
         eventTitleEdit:'',
-        eventLevelEdit:'',
+        eventLevelEdit:0,
         eventStartDateEdit:'',
         eventEndDateEdit:'',
         allDayEdit:'',
@@ -367,6 +479,15 @@
 
         linkActive:false,
         download_link:'',
+
+        firstDayOfWeek:'',
+        todayGregorian:'',
+
+        delayTasks:[],
+        selectDateIn:'',
+
+        reportExportStart:'',
+        reportExportEnd:'',
       }
     },
     components: {
@@ -378,14 +499,77 @@
     },
     methods:
     {
-      getPdfTask()
+printTakhirNum(item) {
+
+  const date1 = moment(new Date(), 'YYYY-MM-DD');
+  const date2 = moment( new Date(item.start_date), 'YYYY-MM-DD');
+  const differenceInDays = date2.diff(date1, 'days');
+  return differenceInDays * (-1);
+},
+
+      checkTodayGregorian(date) {
+          const start_date = new Date(date);
+          const today = new Date();
+
+          start_date.setHours(0, 0, 0, 0);
+          today.setHours(0, 0, 0, 0);
+
+          if (start_date.getTime() !== today.getTime()) {
+              return false;
+          } else {
+              return true;
+          }        
+      },
+      checkTakhir(item)
+      {
+        const start_date = new Date(item.start_date); // تبدیل رشته به شیء Date
+        const today = new Date();
+
+        start_date.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+
+        if (start_date < today) {
+          if(item.done_at !== null)
+          {
+            return true;
+          }
+          return false;
+        } else {
+            return true;
+        }
+      },
+      formatDate(startDate) {
+        return moment(startDate, 'jYYYY-jMM-jDD HH:mm:ss').format('jYYYY/jMM/jDD');
+      },     
+      exportMonthlyReportWord()
       {
         axios.get(this.getAppUrl() + 'sanctum/getToken').then(response => {
           const token = response.data.token;
-          
+          const task_status = this.task_status;
+          const reportExportStart = this.reportExportStart;
+          const reportExportEnd = this.reportExportEnd;
           axios.request({
               method: 'GET',
-              url: this.getAppUrl() + 'api/user/tasks?action=getPdfTask&status='+this.task_status,
+              url: this.getAppUrl() + 'api/user/tasks?action=exportMonthlyReportWord&task_status='+task_status + '&reportExportEnd=' + reportExportEnd + '&reportExportStart=' + reportExportStart,
+              headers: {'Authorization': `Bearer ${token}`}
+          }).then(response => {
+            this.linkActive = true;  
+            this.download_link =  response.data.download_link;     
+          }).catch(error => {
+              this.checkError(error);
+          });
+        }).catch(error => {
+            this.checkError(error);
+        });
+      },
+      getTasksInProgressWord()
+      {
+        axios.get(this.getAppUrl() + 'sanctum/getToken').then(response => {
+          const token = response.data.token;
+          const selectDateIn = this.selectDateIn;
+          axios.request({
+              method: 'GET',
+              url: this.getAppUrl() + 'api/user/tasks?action=getTasksInProgressWord&selectDateIn='+selectDateIn,
               headers: {'Authorization': `Bearer ${token}`}
           }).then(response => {
             this.linkActive = true;  
@@ -421,12 +605,11 @@
           return '';
 
       },
-      taskDone()
+      taskDone(taskId)
       {
         axios.get(this.getAppUrl() + 'sanctum/getToken').then(response => {
             
             const token = response.data.token;
-            const taskId = this.taskId;
             const action = 'taskDone'; 
   
             axios.request({
@@ -563,7 +746,7 @@
           
           axios.request({
               method: 'GET',
-              url: this.getAppUrl() + 'api/user/tasks?action=getTasks&page='+page+'&status='+this.task_status,
+              url: this.getAppUrl() + 'api/user/tasks?action=getTasks&page='+page+'&status='+this.task_status + '&reportExportEnd=' + this.reportExportEnd + '&reportExportStart=' + this.reportExportStart,
               headers: {'Authorization': `Bearer ${token}`}
           }).then(response => {
             this.Tasks = response.data.Tasks.data;
@@ -601,54 +784,29 @@
             this.checkError(error);
         });
       }, 
-      calculateDaysDifference(startDate, endDate) {
-        const oneDay = 24 * 60 * 60 * 1000; // یک روز به میلی‌ثانیه
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        const differenceMs = Math.abs(end - start);
-        const differenceDays = Math.round(differenceMs / oneDay);
-        return differenceDays;
-      },         
+      printDate(firstDayOfWeek,addNum)
+      {
+        const jalaliDate = moment(firstDayOfWeek, 'jYYYY/jMM/jDD');
+        jalaliDate.add(addNum, 'days');
+        return jalaliDate.format('jYYYY/jMM/jDD');
+      } ,        
 getTasksInProgress() {
     axios.get(this.getAppUrl() + 'sanctum/getToken')
         .then(response => {
             const token = response.data.token;
-
+            const selectDateIn = this.selectDateIn;
             axios.request({
                 method: 'GET',
-                url: this.getAppUrl() + 'api/user/tasks?action=getTasksInProgress',
+                url: this.getAppUrl() + 'api/user/tasks?action=getTasksInProgress&selectDateIn=' + selectDateIn,
                 headers: { 'Authorization': `Bearer ${token}` }
             }).then(response => {
                 this.isAdmin = response.data.isAdmin;
+                this.TasksInProgress = response.data.TasksInProgress;
                 const tasksInProgress = response.data.TasksInProgress;
+                this.delayTasks = response.data.delayTasks;
                 this.todayTask = response.data.todayTask;
-
-                const today = new Date();
-                today.setHours(0, 0, 0, 0); // تنظیم ساعت به 00:00:00:000 برای مقایسه فقط تاریخ
-
-                const events = tasksInProgress.map(task => {
-                    const startDate = new Date(task.start_date);
-                    let endDate = new Date(task.end_date);
-                    // اگر تاریخ پایان کمتر از امروز است، آن را به امروز تغییر دهید
-                    let dayDiffTitle = ""
-                    if (endDate < today) {
-                        const differenceDays = this.calculateDaysDifference(endDate,today)
-                        dayDiffTitle = differenceDays.toString() + ' - ';
-                        endDate = today;
-                        today.setHours(23, 59, 59, 0);
-                    }
-      
-                    return {
-                        id: task.id,
-                        title: ' - ' + dayDiffTitle + task.employee.username + ' - ' + task.title,
-                        start: startDate,
-                        end: endDate,
-                        backgroundColor: this.FullCalendarbackgroundColor(task.level),
-                        textColor: '#000000'
-                    };
-                });
-
-                this.calendarOptions.events = events;
+                this.todayGregorian = response.data.gregorianDate;
+                this.firstDayOfWeek = response.data.firstDayOfWeek; 
             }).catch(error => {
                 this.checkError(error);
             });
@@ -722,6 +880,9 @@ getTasksInProgress() {
 .swal2-container {
   z-index: 25000;
 }
+.container-xxl, .container-xl, .container-lg, .container-md, .container-sm, .container {
+        max-width: 99.5%;
+    }
 </style>
   
   

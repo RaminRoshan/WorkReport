@@ -18,7 +18,7 @@ app.use(Vue3PersianDatetimePicker, {
       altFormat: 'YYYY-MM-DD HH:mm',
       color: '#00acc1',
       autoSubmit: true,
-      type:'datetime',
+      type:'date',
       clearable:true
       //...
       //... And whatever you want to set as default.

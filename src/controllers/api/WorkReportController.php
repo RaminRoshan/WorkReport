@@ -499,7 +499,7 @@ class WorkReportController extends Controller
         $p = $point;
         foreach ($bestProgramDevelop as $key => $value) {
             $username = $value->employee->username;
-            $rankedUsers['کاربر '.$username] = ($rankedUsers['کاربر '.$username] ?? 0) + (($p--)*3);
+            $rankedUsers['کاربر '.$username] = ($rankedUsers['کاربر '.$username] ?? 0) + (($p--)*5);
         } 
         $p = $point;
         foreach ($bestTranslate as $key => $value) {
