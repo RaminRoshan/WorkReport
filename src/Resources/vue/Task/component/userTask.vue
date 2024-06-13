@@ -62,11 +62,10 @@
               <th>#</th>
               <th>عنوان</th>
               <th>مسئول</th>
-              <th>از</th>
-              <th>تا</th>
-              <th>مکان</th>
+              <th>تاریخ تنظیم شده</th>
               <th>وضعیت</th>
-              <th>زمان انجام</th>
+              <th>تاریخ انجام</th>
+              <th>اضافه کردن به گزارش کار</th>
             </tr>
         </thead>
         <tbody>
@@ -75,13 +74,83 @@
             <td>{{ item.title }}</td>
             <td>{{ item.employee.username }}</td>
             <td>{{ convertDateToPersian(item.start_date) }}</td>
-            <td>{{ convertDateToPersian(item.end_date) }}</td>
-            <td>{{ item.location }}</td>
             <td>{{ translateText(item.status) }}</td>
             <td>{{ convertDateToPersian(item.done_at) }}</td>
+            <td>
+              <button v-if="item.done_at != null" class="btn btn-primary btn-sm" @click="projectShow.result_type = 'notUsed';start_time='';end_time='';outcome='';project_task='';description=item.description;date=item.done_at" data-bs-toggle="modal" data-toggle="modal" data-bs-target="#addNewTask" data-target="#addNewTask">
+                <i class="fa fa-plus"></i>
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
+      <div class="modal fade" id="addNewTask" tabindex="-1" aria-labelledby="addNewTaskLabel" style="display: none;" aria-hidden="false">
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="addNewTaskLabel">ایجاد گزارش کار</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-sm-12 col-md-6">
+                  <div class="form-group">
+                    <label for="date">تاریخ</label>
+                    <date-picker v-model="date"></date-picker>
+                  </div>
+                </div>
+                <div class="col-sm-12 col-md-6">  
+                  <div class="form-group">
+                    <label for="project_task">پروژه</label>
+                    <select class="form-select" v-model="project_task" aria-label="Default select example" @change="getProjectForShow()">
+                      <option v-for="item in projectsShow"  :value="item.name">{{item.name}}</option>
+                    </select>
+                  </div>
+                </div>                        
+                <div class="col-sm-12 col-md-6">
+                  <div class="form-group">
+                    <label for="start_time">زمان شروع</label>
+                    <input type="time" class="form-control" id="start_time" v-model="start_time">
+                  </div>
+                </div>
+                <div class="col-sm-12 col-md-6">
+                  <div class="form-group">
+                    <label for="end_time">زمان پایان</label>
+                    <input type="time" class="form-control" id="end_time" v-model="end_time" >
+                  </div>                                                                       
+                </div>                                                                        
+                <div class="col-sm-12 col-md-12">                                
+                  <div class="form-group">
+                    <label for="description">توضیحات</label>
+                    <textarea class="form-control" id="description" v-model="description" style="min-height:150px;"></textarea>
+                  </div>
+                </div>
+                <div class="col-sm-12 col-md-12" v-if="projectShow.result_type != 'notUsed'">  
+                  <div class="form-group">
+                    <label for="outcome">نتیجه</label>
+                    <input type="number" placeholder="تعداد را وارد کنید" v-model="outcome" class="form-control" v-if="projectShow.result_type == 'int'">
+                    <input type="text" placeholder="متن را وارد کنید" v-model="outcome" class="form-control" v-if="projectShow.result_type == 'text'">
+                    <select class="form-select" v-model="outcome" @change="handleOptionChange" aria-label="Default select example" v-if="projectShow.result_type == 'select'">
+                      <option v-for="item in projectItemShow" :value="item.name">{{item.name}}</option>
+                    </select>                                             
+                  </div>
+                </div> 
+                <div class="col-sm-12 col-md-8"></div>
+                <div class="col-sm-12 col-md-2">  
+                  <br>
+                  <button type="button" class="btn btn-danger btn-block" data-bs-dismiss="modal" data-dismiss="modal" ><i class="fa fa-close menu-icon"></i> لغو</button> 
+                </div>
+                <div class="col-sm-12 col-md-2">  
+                  <br>
+                  <button type="button" @click="saveNewWorkReport()" class="btn btn-success btn-block" ><i class="fa fa-save menu-icon"></i> ایجاد</button>
+                </div>                            
+              </div>                                                          
+            </div>
+            <div class="modal-footer custom">
+            </div>
+          </div>
+        </div>
+      </div>        
     </div>
     <div class="col-sm-12  card mt-4 card">
       <nav aria-label="Page navigation" v-if="pagination.last_page != 1">
@@ -169,9 +238,10 @@
               <tr>
                 <td style="min-height: 400px;display: block; text-align: right;vertical-align: top">
                   <template v-for="item in TasksInProgress" :key="item.id">
-                    <div class="form-check" v-if="(todayGregorian == formatDate(item.start_date)) && checkTakhir(item)">
-                      <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :checked="item.done_at !== null" :disabled="item.done_at !== null">
+                    <div class="form-check" style="padding-right: 0.5em;" v-if="(todayGregorian == formatDate(item.start_date)) && checkTakhir(item)">
+                      <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :checked="item.done_at !== null" >
                       <label class="form-check-label" for="flexCheckDefault" @click="getTask(item.id)">
+                        <i class="fa fa-circle" aria-hidden="true" :style="'font-size:10px;Color:'+ FullCalendarbackgroundColor(item.level)"></i>
                         {{item.title}}
                       </label>
                     </div>                  
@@ -179,9 +249,10 @@
                 </td>
                 <td style="text-align: right;vertical-align: top">
                   <template v-for="item in TasksInProgress" :key="item.id">
-                    <div class="form-check" v-if="(printDate(todayGregorian,1) == formatDate(item.start_date)) && checkTakhir(item)">
-                      <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :checked="item.done_at !== null" :disabled="item.done_at !== null">
+                    <div class="form-check" style="padding-right: 0.5em;" v-if="(printDate(todayGregorian,1) == formatDate(item.start_date)) && checkTakhir(item)">
+                      <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :checked="item.done_at !== null" >
                       <label class="form-check-label" for="flexCheckDefault" @click="getTask(item.id)">
+                        <i class="fa fa-circle" aria-hidden="true" :style="'font-size:10px;Color:'+ FullCalendarbackgroundColor(item.level)"></i>
                         {{item.title}}
                       </label>
                     </div>                   
@@ -189,9 +260,10 @@
                 </td>
                 <td style="text-align: right;vertical-align: top">
                   <template v-for="item in TasksInProgress" :key="item.id">
-                    <div class="form-check" v-if="(printDate(todayGregorian,2) == formatDate(item.start_date)) && checkTakhir(item)">
-                      <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :checked="item.done_at !== null" :disabled="item.done_at !== null">
+                    <div class="form-check" style="padding-right: 0.5em;" v-if="(printDate(todayGregorian,2) == formatDate(item.start_date)) && checkTakhir(item)">
+                      <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :checked="item.done_at !== null" >
                       <label class="form-check-label" for="flexCheckDefault" @click="getTask(item.id)">
+                        <i class="fa fa-circle" aria-hidden="true" :style="'font-size:10px;Color:'+ FullCalendarbackgroundColor(item.level)"></i>
                         {{item.title}}
                       </label>
                     </div>                   
@@ -199,9 +271,10 @@
                 </td>
                 <td style="text-align: right;vertical-align: top">
                   <template v-for="item in TasksInProgress" :key="item.id">
-                    <div class="form-check" v-if="(printDate(todayGregorian,3) == formatDate(item.start_date)) && checkTakhir(item)">
-                      <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :checked="item.done_at !== null" :disabled="item.done_at !== null">
+                    <div class="form-check" style="padding-right: 0.5em;" v-if="(printDate(todayGregorian,3) == formatDate(item.start_date)) && checkTakhir(item)">
+                      <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :checked="item.done_at !== null" >
                       <label class="form-check-label" for="flexCheckDefault" @click="getTask(item.id)">
+                        <i class="fa fa-circle" aria-hidden="true" :style="'font-size:10px;Color:'+ FullCalendarbackgroundColor(item.level)"></i>
                         {{item.title}}
                       </label>
                     </div>                   
@@ -209,9 +282,10 @@
                 </td>
                 <td style="text-align: right;vertical-align: top">
                   <template v-for="item in TasksInProgress" :key="item.id">
-                    <div class="form-check" v-if="(printDate(todayGregorian,4) == formatDate(item.start_date)) && checkTakhir(item)">
-                      <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :checked="item.done_at !== null" :disabled="item.done_at !== null">
+                    <div class="form-check" style="padding-right: 0.5em;" v-if="(printDate(todayGregorian,4) == formatDate(item.start_date)) && checkTakhir(item)">
+                      <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :checked="item.done_at !== null" >
                       <label class="form-check-label" for="flexCheckDefault" @click="getTask(item.id)">
+                        <i class="fa fa-circle" aria-hidden="true" :style="'font-size:10px;Color:'+ FullCalendarbackgroundColor(item.level)"></i>
                         {{item.title}}
                       </label>
                     </div>                   
@@ -219,9 +293,10 @@
                 </td>
                 <td style="text-align: right;vertical-align: top">
                   <template v-for="item in TasksInProgress" :key="item.id">
-                    <div class="form-check" v-if="(printDate(todayGregorian,5) == formatDate(item.start_date)) && checkTakhir(item)">
-                      <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :checked="item.done_at !== null" :disabled="item.done_at !== null">
+                    <div class="form-check" style="padding-right: 0.5em;" v-if="(printDate(todayGregorian,5) == formatDate(item.start_date)) && checkTakhir(item)">
+                      <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :checked="item.done_at !== null" >
                       <label class="form-check-label" for="flexCheckDefault" @click="getTask(item.id)">
+                        <i class="fa fa-circle" aria-hidden="true" :style="'font-size:10px;Color:'+ FullCalendarbackgroundColor(item.level)"></i>
                         {{item.title}}
                       </label>
                     </div>                   
@@ -234,9 +309,10 @@
                 <td style="min-height: 200px;display: block; text-align: right;vertical-align: top">
                   <template v-if="checkTodayGregorian(printDate(todayGregorian,0))">
                     <template v-for="item in delayTasks" :key="item.id">
-                      <div class="form-check">
+                      <div class="form-check" style="padding-right: 0.5em;">
                         <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :id="'id'+item.id">
                         <label class="form-check-label" for="flexCheckDefault" @click="getTask(item.id)">
+                          <i class="fa fa-circle" aria-hidden="true" :style="'font-size:10px;Color:'+ FullCalendarbackgroundColor(item.level)"></i>
                           {{printTakhirNum(item)}} - {{item.title}}
                         </label>
                       </div>                
@@ -246,9 +322,10 @@
                 <td style="text-align: right;vertical-align: top">
                   <template v-if="checkTodayGregorian(printDate(todayGregorian,1))">
                     <template v-for="item in delayTasks" :key="item.id">
-                      <div class="form-check">
+                      <div class="form-check" style="padding-right: 0.5em;">
                         <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :id="'id'+item.id">
                         <label class="form-check-label" for="flexCheckDefault" @click="getTask(item.id)">
+                          <i class="fa fa-circle" aria-hidden="true" :style="'font-size:10px;Color:'+ FullCalendarbackgroundColor(item.level)"></i>
                           {{printTakhirNum(item)}} - {{item.title}}
                         </label>
                       </div>               
@@ -258,9 +335,10 @@
                 <td style="text-align: right;vertical-align: top">
                   <template v-if="checkTodayGregorian(printDate(todayGregorian,2))">
                     <template v-for="item in delayTasks" :key="item.id">
-                      <div class="form-check">
+                      <div class="form-check" style="padding-right: 0.5em;">
                         <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :id="'id'+item.id">
                         <label class="form-check-label" for="flexCheckDefault" @click="getTask(item.id)">
+                          <i class="fa fa-circle" aria-hidden="true" :style="'font-size:10px;Color:'+ FullCalendarbackgroundColor(item.level)"></i>
                           {{printTakhirNum(item)}} - {{item.title}}
                         </label>
                       </div>              
@@ -270,9 +348,10 @@
                 <td style="text-align: right;vertical-align: top">
                   <template v-if="checkTodayGregorian(printDate(todayGregorian,3))">
                     <template v-for="item in delayTasks" :key="item.id">
-                      <div class="form-check">
+                      <div class="form-check" style="padding-right: 0.5em;">
                         <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :id="'id'+item.id">
                         <label class="form-check-label" for="flexCheckDefault" @click="getTask(item.id)">
+                          <i class="fa fa-circle" aria-hidden="true" :style="'font-size:10px;Color:'+ FullCalendarbackgroundColor(item.level)"></i>
                           {{printTakhirNum(item)}} - {{item.title}}
                         </label>
                       </div>             
@@ -282,9 +361,10 @@
                 <td style="text-align: right;vertical-align: top">
                   <template v-if="checkTodayGregorian(printDate(todayGregorian,4))">
                     <template v-for="item in delayTasks" :key="item.id">
-                      <div class="form-check">
+                      <div class="form-check" style="padding-right: 0.5em;">
                         <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :id="'id'+item.id">
                         <label class="form-check-label" for="flexCheckDefault" @click="getTask(item.id)">
+                          <i class="fa fa-circle" aria-hidden="true" :style="'font-size:10px;Color:'+ FullCalendarbackgroundColor(item.level)"></i>
                           {{printTakhirNum(item)}} - {{item.title}}
                         </label>
                       </div>               
@@ -294,9 +374,10 @@
                 <td style="text-align: right;vertical-align: top">
                   <template v-if="checkTodayGregorian(printDate(todayGregorian,5))">
                     <template v-for="item in delayTasks" :key="item.id">
-                      <div class="form-check">
+                      <div class="form-check" style="padding-right: 0.5em;">
                         <input class="form-check-input" type="checkbox" @click="taskDone(item.id)" :id="'id'+item.id">
                         <label class="form-check-label" for="flexCheckDefault" @click="getTask(item.id)">
+                          <i class="fa fa-circle" aria-hidden="true" :style="'font-size:10px;Color:'+ FullCalendarbackgroundColor(item.level)"></i>
                           {{printTakhirNum(item)}} - {{item.title}}
                         </label>
                       </div>              
@@ -333,15 +414,15 @@
           <option value="2">مهم</option>
           <option value="3">خیلی مهم</option>
         </select>
-      </div>
+      </div> 
       <div class="mb-3 fv-plugins-icon-container fv-plugins-bootstrap5-row-valid">
-        <label class="form-label" for="eventStartDate">تاریخ شروع</label>
-        <date-picker v-model="eventStartDate" disable="1403-01-17"></date-picker>
+        <label class="form-label" for="eventStartDate">تاریخ انجام</label>
+        <date-picker v-model="eventStartDate" placeholder="تاریخ انجام وظیفه را وارد کنید."></date-picker>
         <div class="fv-plugins-message-container invalid-feedback"></div>
       </div>
       <div class="mb-3">
         <label class="form-label" for="eventDescription">توضیحات</label>
-        <textarea class="form-control" v-model="eventDescription" id="eventDescription"></textarea>
+        <textarea class="form-control" v-model="eventDescription" id="eventDescription" placeholder="توضیحات وظیفه را وارد کنید"></textarea>
       </div>
       <div class="mb-3 d-flex justify-content-sm-between justify-content-start my-4">
         <div>
@@ -376,13 +457,13 @@
         </select>
       </div>
       <div class="mb-3 fv-plugins-icon-container fv-plugins-bootstrap5-row-valid">
-        <label class="form-label" for="eventStartDate">تاریخ شروع</label>
-        <date-picker v-model="eventStartDateEdit" disable="1403-01-17"></date-picker>
+        <label class="form-label" for="eventStartDate">تاریخ انجام</label>
+        <date-picker v-model="eventStartDateEdit" placeholder="تاریخ انجام وظیفه را وارد کنید."></date-picker>
         <div class="fv-plugins-message-container invalid-feedback"></div>
       </div>
       <div class="mb-3">
         <label class="form-label" for="eventDescription">توضیحات</label>
-        <textarea class="form-control" v-model="eventDescriptionEdit" id="eventDescription"></textarea>
+        <textarea class="form-control" v-model="eventDescriptionEdit" id="eventDescription" placeholder="توضیحات وظیفه را وارد کنید"></textarea>
       </div>
       <div class="mb-3 d-flex justify-content-sm-between justify-content-start my-4">
         <div>
@@ -488,6 +569,18 @@
 
         reportExportStart:'',
         reportExportEnd:'',
+
+        projectsShow:[],
+        projectShow:[],
+        projectItemShow:[],  
+
+        date: '', 
+        start_time:'',           
+        end_time:'',  
+        description:'',
+        outcome:'',         
+        project_task:'',   
+        location:'',              
       }
     },
     components: {
@@ -496,17 +589,71 @@
     mounted() {
       this.getTasksInProgress();
       this.getTasks();
+      this.getProjectsForShow();
     },
     methods:
     {
-printTakhirNum(item) {
+      getProjectsForShow()
+      {
+          axios.get(this.getAppUrl() + 'sanctum/getToken').then(response => {
+              const token = response.data.token;
 
-  const date1 = moment(new Date(), 'YYYY-MM-DD');
-  const date2 = moment( new Date(item.start_date), 'YYYY-MM-DD');
-  const differenceInDays = date2.diff(date1, 'days');
-  return differenceInDays * (-1);
-},
+              axios.request({
+                  method: 'GET',
+                  url: this.getAppUrl() + 'api/user/WorkReport?action=getProjectsForShow',
+                  headers: {'Authorization': `Bearer ${token}`}
+              }).then(response => {
+                  this.projectsShow = response.data.Projects;   
+              }).catch(error => {
+                  this.checkError(error);
+              });
+          }).catch(error => {
+              this.checkError(error);
+          });            
+      },      
+      printTakhirNum(item) {
 
+        const date1 = moment(new Date(), 'YYYY-MM-DD');
+        const date2 = moment( new Date(item.start_date), 'YYYY-MM-DD');
+        const differenceInDays = date2.diff(date1, 'days');
+        return differenceInDays * (-1);
+      },
+      saveNewWorkReport() {
+          axios.get(this.getAppUrl() + 'sanctum/getToken').then(response => {
+              
+              const token = response.data.token;
+              const date = this.convertDateToPersian(this.date)
+              const start_time = this.start_time;
+              const end_time = this.end_time;
+              const description = this.description;
+              const outcome = this.outcome;
+              const project_task = this.project_task;
+              const action = 'saveNewWorkReport'; 
+
+              axios.request({
+                  method: 'POST',
+                  url: this.getAppUrl() + 'api/user/WorkReport',
+                  headers: {'Authorization': `Bearer ${token}`},
+                  data: { date, start_time , end_time , description , outcome , project_task , action , action }
+              }).then(response => {
+                  this.date = ""
+                  this.start_time = "";
+                  this.end_time = "";
+                  this.description = "";
+                  this.outcome = "";
+                  this.project_task = "";                    
+                  Swal.fire(
+                      'اضافه شد!',
+                      'گزارش کار شما با موفقیت اضافه شد.',
+                      'success'
+                  );   
+              }).catch(error => {
+                  this.checkError(error);
+              });        
+          }).catch(error => {
+              this.checkError(error);
+          });
+      }, 
       checkTodayGregorian(date) {
           const start_date = new Date(date);
           const today = new Date();
@@ -599,8 +746,9 @@ printTakhirNum(item) {
 
       },      
       convertDateToPersian(date){
+        console.log(date)
         if(date)
-          return moment(date, "YYYY-MM-DD H:i:s").locale("fa").format("jYYYY/jMM/jDD H:mm:ss");
+          return moment(date, "YYYY-MM-DD H:i:s").locale("fa").format("jYYYY/jMM/jDD");
         else
           return '';
 
@@ -790,31 +938,49 @@ printTakhirNum(item) {
         jalaliDate.add(addNum, 'days');
         return jalaliDate.format('jYYYY/jMM/jDD');
       } ,        
-getTasksInProgress() {
-    axios.get(this.getAppUrl() + 'sanctum/getToken')
-        .then(response => {
-            const token = response.data.token;
-            const selectDateIn = this.selectDateIn;
-            axios.request({
-                method: 'GET',
-                url: this.getAppUrl() + 'api/user/tasks?action=getTasksInProgress&selectDateIn=' + selectDateIn,
-                headers: { 'Authorization': `Bearer ${token}` }
-            }).then(response => {
-                this.isAdmin = response.data.isAdmin;
-                this.TasksInProgress = response.data.TasksInProgress;
-                const tasksInProgress = response.data.TasksInProgress;
-                this.delayTasks = response.data.delayTasks;
-                this.todayTask = response.data.todayTask;
-                this.todayGregorian = response.data.gregorianDate;
-                this.firstDayOfWeek = response.data.firstDayOfWeek; 
-            }).catch(error => {
-                this.checkError(error);
-            });
-        }).catch(error => {
-            this.checkError(error);
-        });
-},
-
+      getTasksInProgress() {
+          axios.get(this.getAppUrl() + 'sanctum/getToken')
+              .then(response => {
+                  const token = response.data.token;
+                  const selectDateIn = this.selectDateIn;
+                  axios.request({
+                      method: 'GET',
+                      url: this.getAppUrl() + 'api/user/tasks?action=getTasksInProgress&selectDateIn=' + selectDateIn,
+                      headers: { 'Authorization': `Bearer ${token}` }
+                  }).then(response => {
+                      this.isAdmin = response.data.isAdmin;
+                      this.TasksInProgress = response.data.TasksInProgress;
+                      const tasksInProgress = response.data.TasksInProgress;
+                      this.delayTasks = response.data.delayTasks;
+                      this.todayTask = response.data.todayTask;
+                      this.todayGregorian = response.data.gregorianDate;
+                      this.firstDayOfWeek = response.data.firstDayOfWeek; 
+                  }).catch(error => {
+                      this.checkError(error);
+                  });
+              }).catch(error => {
+                  this.checkError(error);
+              });
+      },
+      getProjectForShow(type='')
+      {
+          axios.get(this.getAppUrl() + 'sanctum/getToken').then(response => {
+              const token = response.data.token;
+              
+              axios.request({
+                  method: 'GET',
+                  url: this.getAppUrl() + 'api/user/WorkReport?action=getProjectForShow&type='+type+'&edit_project_task='+this.edit_project_task+'&project_task='+this.project_task,
+                  headers: {'Authorization': `Bearer ${token}`}
+              }).then(response => {
+                  this.projectShow = response.data.projectShow;   
+                  this.projectItemShow = response.data.items;   
+              }).catch(error => {
+                  this.checkError(error);
+              });
+          }).catch(error => {
+              this.checkError(error);
+          }); 
+      },
       FullCalendarbackgroundColor(level)
       {
         switch (level) {

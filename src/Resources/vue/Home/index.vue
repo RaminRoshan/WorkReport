@@ -1,5 +1,105 @@
 <template>
 <div class="row">
+    <div class="col-lg-12 col-12">
+        <div class="row">
+            <div class="col-2 col-md-3 col-lg-2 mb-4">
+                <div class="card h-100" style="background: floralwhite;">
+                    <div class="card-body text-center">
+                        <div class="avatar mx-auto mb-2">
+                        <span class="avatar-initial rounded-circle bg-label-primary"><i class="fa fa-list fs-4"></i></span>
+                        </div>
+                        <span class="d-block text-nowrap pt-1">کل وظایف</span>
+                        <h2 class="mb-n3" v-if="TaskLoading == false">{{TotalTask}}</h2>
+                        <h2 class="mb-n3" v-else>
+                            <div class="spinner-border text-secondary" role="status">
+                                <span class="visually-hidden">در حال بارگذاری ...</span>
+                            </div>
+                        </h2>
+                    </div>
+                </div>
+            </div> 
+            <div class="col-2 col-md-3 col-lg-2 mb-4">
+                <div class="card h-100" style="background: floralwhite;">
+                    <div class="card-body text-center">
+                        <div class="avatar mx-auto mb-2">
+                            <span class="avatar-initial rounded-circle bg-label-success"><i class="fa fa-check fs-4"></i></span>
+                        </div>
+                        <span class="d-block text-nowrap pt-1">وظایف انجام شده</span>
+                        <h2 class="mb-n3" v-if="TaskLoading == false">{{doneTask}}</h2>
+                        <h2 class="mb-n3" v-else>
+                            <div class="spinner-border text-secondary" role="status">
+                                <span class="visually-hidden">در حال بارگذاری ...</span>
+                            </div>
+                        </h2>
+                    </div>
+                </div>
+            </div>   
+            <div class="col-2 col-md-3 col-lg-2 mb-4">
+                <div class="card h-100"  style="background: floralwhite;">
+                    <div class="card-body text-center">
+                        <div class="avatar mx-auto mb-2">
+                        <span class="avatar-initial rounded-circle bg-label-danger"><i class="fa fa-close fs-4"></i></span>
+                        </div>
+                        <span class="d-block text-nowrap pt-1">وظایف انجام نشده</span>
+                        <h2 class="mb-n3" v-if="TaskLoading == false">{{notDoneTask}}</h2>
+                        <h2 class="mb-n3" v-else>
+                            <div class="spinner-border text-secondary" role="status">
+                                <span class="visually-hidden">در حال بارگذاری ...</span>
+                            </div>
+                        </h2>
+                    </div>
+                </div>
+            </div>                            
+            <div class="col-2 col-md-3 col-lg-2 mb-4">
+                <div class="card h-100" style="background: floralwhite;">
+                    <div class="card-body text-center">
+                        <div class="avatar mx-auto mb-2">
+                        <span class="avatar-initial rounded-circle bg-label-danger"><i class="fa fa-clock fs-4"></i></span>
+                        </div>
+                        <span class="d-block text-nowrap pt-1">وظایف با تاخیر</span>
+                        <h2 class="mb-n3" v-if="TaskLoading == false">{{DelayToDo}}</h2>
+                        <h2 class="mb-n3" v-else>
+                            <div class="spinner-border text-secondary" role="status">
+                                <span class="visually-hidden">در حال بارگذاری ...</span>
+                            </div>
+                        </h2>                        
+                    </div>
+                </div>
+            </div>
+            <div class="col-2 col-md-3 col-lg-2 mb-4">
+                <div class="card h-100" style="background: floralwhite;">
+                    <div class="card-body text-center">
+                        <div class="avatar mx-auto mb-2">
+                        <span class="avatar-initial rounded-circle bg-label-warning"><i class="fa fa-list-alt fs-4"></i></span>
+                        </div>
+                        <span class="d-block text-nowrap pt-1">وظایف امروز</span>
+                        <h2 class="mb-n3" v-if="TaskLoading == false">{{todayTask}}</h2>
+                        <h2 class="mb-n3" v-else>
+                            <div class="spinner-border text-secondary" role="status">
+                                <span class="visually-hidden">در حال بارگذاری ...</span>
+                            </div>
+                        </h2> 
+                    </div>
+                </div>
+            </div>
+            <div class="col-2 col-md-3 col-lg-2 mb-4">
+                <div class="card h-100" style="background: floralwhite;">
+                    <div class="card-body text-center">
+                        <div class="avatar mx-auto mb-2">
+                        <span class="avatar-initial rounded-circle bg-label-warning"><i class="fa fa-paper-plane fs-4"></i></span>
+                        </div>
+                        <span class="d-block text-nowrap pt-1">وظایف محول شده</span>
+                        <h2 class="mb-n3" v-if="TaskLoading == false">{{lockTask}}</h2>
+                        <h2 class="mb-n3" v-else>
+                            <div class="spinner-border text-secondary" role="status">
+                                <span class="visually-hidden">در حال بارگذاری ...</span>
+                            </div>
+                        </h2> 
+                    </div>
+                </div>
+            </div>            
+        </div>
+    </div>
     <div class="col-md-8 col-lg-8 col-xl-8 mb-xl-0">
         <div class="card h-100">
             <div class="card-header">
@@ -320,6 +420,13 @@ export default {
             identificationPercent:0,
             identification:0,
             identificationSum:0,
+            TaskLoading:false,
+            TotalTask:0,
+            doneTask:0,
+            notDoneTask:0,
+            DelayToDo:0,
+            todayTask:0,
+            lockTask:0,
             data : {
                 labels: [],
                 datasets: [
@@ -344,8 +451,37 @@ export default {
     components: { Line , Bar  }, 
     mounted() {
         this.getStatistics();
+        this.getTaskStatistics();
     },
     methods: {  
+        getTaskStatistics()
+        {
+            this.TaskLoading = true;
+            axios.get(this.getAppUrl() + 'sanctum/getToken').then(response => {
+                const token = response.data.token;
+                const dateStart = this.date_start;
+                const dateEnd = this.date_end;
+                const project_task_search = this.project_task_search
+
+                axios.request({
+                    method: 'GET',
+                    url: this.getAppUrl() + 'api/user/tasks?action=getStatistics&date_start='+dateStart+'&date_end='+dateEnd+'&project_task_search='+project_task_search,
+                    headers: {'Authorization': `Bearer ${token}`}
+                }).then(response => {
+                    this.TotalTask = response.data.TotalTask;  
+                    this.doneTask = response.data.doneTask;  
+                    this.notDoneTask = response.data.notDoneTask;  
+                    this.DelayToDo = response.data.DelayToDo;  
+                    this.todayTask = response.data.todayTask;  
+                    this.lockTask = response.data.lockTask;  
+                }).catch(error => {
+                    this.checkError(error);
+                });
+            }).catch(error => {
+                this.checkError(error);
+            });
+            this.TaskLoading = false;
+        },         
         getStatistics()
         {
             axios.get(this.getAppUrl() + 'sanctum/getToken').then(response => {
