@@ -9,22 +9,24 @@ use Pishgaman\Pishgaman\Middleware\CheckMenuAccess;
 use Pishgaman\WorkReport\Database\Models\Task;
 use Pishgaman\Pishgaman\Database\Models\User\User;
 use Pishgaman\Pishgaman\Database\Models\Department\DepartmentUser;
+use Pishgaman\Wintas\Database\Models\CalendarDetail;
 use Hekmatinasser\Verta\Verta;
 use Carbon\Carbon;
 use Pishgaman\Pishgaman\Library\mpdf\MpdfInterface;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\Shared\Html;
 use PhpOffice\PhpWord\Style\Font;
-
+use PhpOffice\PhpWord\Style\Language;
+use Log;
 class TaskController extends Controller
 {
     private $validActions = [
         'saveNewTask' , 'getTasksInProgress' , 'getTask' , 'taskDone' , 'deleteTask' , 'saveEditTask' , 'getTasks' , 'getTasksInProgressWord' , 'exportMonthlyReportWord',
-        'getStatistics'
+        'getStatistics' , 'CheckHoliday'
     ];
 
     protected $validMethods = [
-        'GET' => ['getTasksInProgress','getTask','getTasks' , 'getTasksInProgressWord' , 'exportMonthlyReportWord','getStatistics'], // Added 'createAccessLevel' as a valid method-action pair
+        'GET' => ['getTasksInProgress','getTask','getTasks' , 'getTasksInProgressWord' , 'exportMonthlyReportWord','getStatistics','CheckHoliday'], // Added 'createAccessLevel' as a valid method-action pair
         'POST' => ['saveNewTask'], // Added 'createAccessLevel' as a valid action for POST method
         'PUT' => ['taskDone','saveEditTask'],
         'DELETE' => ['deleteTask']
@@ -155,8 +157,6 @@ class TaskController extends Controller
             $Mpdf->save($Mpdf_1,$path);
         }
 
-
-        
         return response()->json(['download_link' => url('media/Task/PDF/'.$currentUser->username.'.pdf')], 200);
     }
 
@@ -188,6 +188,59 @@ class TaskController extends Controller
                 break;
         }
     }
+
+    private function getFormattedDuration($startDate, $endDate)
+    {
+        $durationInMinutes = $endDate->diffInMinutes($startDate);
+        $durationInHours = $endDate->diffInHours($startDate);
+        $durationInDays = $endDate->diffInDays($startDate);
+    
+        $days = floor($durationInMinutes / (60 * 24));
+        $durationInMinutes -= $days * 60 * 24;
+    
+        $hours = floor($durationInMinutes / 60);
+        $minutes = $durationInMinutes % 60;
+    
+        $formattedDuration = '';
+    
+        if ($days > 0) {
+            $formattedDuration = $days . ' روز ';
+        }
+        else {
+            $formattedDuration .= '1 روز ';
+        }
+    
+        return $formattedDuration;
+    }
+    
+    private function getWeekOfMonth($date)
+    {
+        $firstDayOfMonth = clone $date;
+        $firstDayOfMonth->startMonth();
+        return (int) ceil($date->day / 7);
+    }
+
+    public function CheckHoliday($date)
+    {
+        $Holiday = [];
+        $originalDate = clone $date; // ساختن یک کپی از تاریخ اصلی
+        
+        for ($i = 0; $i <= 5; $i++) {
+            $modifiedDate = clone $originalDate; // ساختن یک کپی از تاریخ اصلی برای هر تکرار
+            $modifiedDate->modify('+' . $i . ' days');
+            $jalaliDate = new Verta($modifiedDate); // تبدیل به تاریخ شمسی
+            $jalaliDateString = $jalaliDate->format('Y/m/d'); // تبدیل به رشته شمسی
+            
+            $check = CalendarDetail::where([
+                ['WorkBeginDate', $jalaliDateString], // بررسی بر اساس تاریخ میلادی
+            ])->first();
+            
+            $Holiday[$jalaliDateString] = $check->Holiday ?? 0;// استفاده از optional برای جلوگیری از خطا
+        }
+        
+        return $Holiday;
+    }
+    
 
     public function getStatistics(Request $request)
     {
@@ -222,11 +275,14 @@ class TaskController extends Controller
         $currentUser = auth()->user();
         $isAdmin = $this->isAdmin();
     
-        if ($isAdmin) {
-            $departmentUser = DepartmentUser::where('user_id', $currentUser->id)->first();
-            $employees = DepartmentUser::where('department_id', $departmentUser->department_id)->pluck('user_id')->toArray();
-            $tasks = Task::whereIn('employee_id', $employees);
-        } else {
+        if($isAdmin)
+        {
+            $departmentUser = DepartmentUser::where('user_id',$currentUser->id)->where('job_position','admin')->pluck('department_id'); 
+            $employees = DepartmentUser::whereIn('department_id',$departmentUser)->pluck('user_id');
+            $tasks = Task::whereIn('employee_id',$employees);
+        }
+        else 
+        {
             $tasks = Task::where('employee_id', $currentUser->id);
         }
     
@@ -432,39 +488,36 @@ class TaskController extends Controller
         return response()->json(['Task'=>$Task], 200);       
     }
 
+    
     public function exportMonthlyReportWord($request)
     {
         if (!$this->isValidAction('exportMonthlyReportWord', 'GET')) {
             return response()->json(['errors' => 'requestNotAllowed'], 422);
         }
-        
+    
         $currentUser = auth()->user();
         $isAdmin = $this->isAdmin();
-        
+    
         $selectedDate = $request->selectDateIn ? new Verta($request->selectDateIn) : Verta::now();
-        
-        $firstDayOfWeek = clone $selectedDate;
-        $todayGregorianDate = $selectedDate->DateTime();
-        
-        $firstDayOfWeek->startWeek();
-        $firstDayOfWeekFormatted = $firstDayOfWeek->format('Y/m/d');
-        $gregorianDateStart = Verta::parseFormat('Y/n/j', $firstDayOfWeekFormatted)->DateTime();
-        $gregorianDateEnd = clone $gregorianDateStart;
-        $gregorianDateEnd->modify('+6 days');
-        
+    
+        $startOfMonth = clone $selectedDate;
+        $startOfMonth->startMonth();
+        $endOfMonth = clone $startOfMonth;
+        $endOfMonth->endMonth();
+    
+        $startGregorian = $startOfMonth->DateTime();
+        $endGregorian = $endOfMonth->DateTime();
+    
         if ($isAdmin) {
             $departmentUser = DepartmentUser::where('user_id', $currentUser->id)->first();
-            $employees = DepartmentUser::where('department_id', $departmentUser->department_id)->pluck('user_id'); 
+            $employees = DepartmentUser::where('department_id', $departmentUser->department_id)->pluck('user_id');
             $tasksInProgress = Task::whereIn('employee_id', $employees);
         } else {
             $tasksInProgress = Task::where('employee_id', $currentUser->id);
         }
-        
-        $reportExportStart = $request->reportExportStart ?: "2024-01-01 00:00:00";
-        $reportExportEnd = $request->reportExportEnd ?: "2124-01-01 00:00:00";
-        
-        $tasksInProgress = $tasksInProgress->whereBetween('start_date', [$reportExportStart, $reportExportEnd]);
-        
+    
+        $tasksInProgress = $tasksInProgress->whereBetween('start_date', [$startGregorian, $endGregorian]);
+    
         if ($request->task_status) {
             switch ($request->task_status) {
                 case 'DelayToDo':
@@ -472,7 +525,7 @@ class TaskController extends Controller
                     break;
                 case 'InProgress':
                     $tasksInProgress = $tasksInProgress->whereNull('done_at')->where('start_date', Carbon::today());
-                    break;                    
+                    break;
                 case 'lock':
                     $tasksInProgress = $tasksInProgress->where('lock', '1');
                     break;
@@ -481,53 +534,70 @@ class TaskController extends Controller
                     break;
             }
         }
-                
+    
         $tasksInProgress = $tasksInProgress->with(['employee:id,username'])->get();
-        $phpWord = new PhpWord();
-        $section = $phpWord->addSection();
-        $phpWord->getSettings()->setHideGrammaticalErrors(false);
-        $phpWord->getSettings()->setHideSpellingErrors(false);
     
-        $phpWord->addNumberingStyle(
-            'multilevel',
-            array(
-                'type' => 'multilevel',
-                'levels' => array(
-                    array('format' => 'decimal', 'text' => '%1.', 'left' => 360, 'hanging' => 360, 'tabPos' => 360),
-                    array('format' => 'upperLetter', 'text' => '%2.', 'left' => 720, 'hanging' => 360, 'tabPos' => 720),
-                ),
-                'rtl' => true, // تنظیم جهت متن به راست به چپ
-                'grammar' => false
-            )
-        );
-    
-        $title = ['bold' => true, 'size' => 14, 'name' => 'B Nazanin', 'grammar' => false, 'grammar' => false];
-        $text = [ 'size' => 14, 'name' => 'B Nazanin', 'underline' => false, 'grammar' => false, 'grammar' => false];
-        $subText = ['bold' => true, 'size' => 12, 'name' => 'B Nazanin', 'underline' => false, 'grammar' => false];
-        
-        // تنظیمات CSS برای جهت متن به راست به چپ
-        $style = ['alignment' => 'right', 'rtl' => true];
-        
+        // دسته‌بندی وظایف بر اساس هفته
+        $tasksByWeek = [];
         foreach ($tasksInProgress as $task) {
-            $employee = "";
-            if ($isAdmin) {
-                $employee = $task->employee->username . ' - ';
-            }
-        
-            $startDate = Carbon::parse($task->start_date);
-            $endDate = Carbon::parse($task->end_date);
-            $duration = $endDate->diffInDays($startDate);
-    
-            // افزودن متن با استفاده از CSS برای جهت متن
-            $section->addListItem($task->title, 0, $title, 'multilevel', $style);
+            $taskDate = Verta::parse($task->start_date);
+            $weekNumber = $this->getWeekOfMonth($taskDate);
+            $tasksByWeek[$weekNumber][] = $task;
         }
-        
+    
+        $phpWord = new PhpWord();
+        $phpWord->getSettings()->setHideGrammaticalErrors(true);
+        $phpWord->getSettings()->setHideSpellingErrors(true);
+        $section = $phpWord->addSection();
+
+        // ایجاد دوره زمانی بین دو تاریخ با فاصله هفت روز
+        $current = $startOfMonth;
+        $weekCount = 1;
+    
+        while ($current->lte($endOfMonth) && $weekCount <= 4) {
+            $weekNumber = $this->getWeekOfMonth($current);
+    
+            // اضافه کردن متن به بخش مربوط به هفته
+            $cellStyle = ['valign' => 'top', 'border' => 'single', 'padding' => 5,'rtl'=>true];
+    
+            if ($weekCount % 2 != 0) {
+                $table = $section->addTable(['border' => 1, 'width' => 100 * 50, 'unit' => 'pct']);
+                $table->addRow();
+            }
+    
+            $cell = $table->addCell(50 * 50, $cellStyle);
+            $cell->addText("هفته $weekCount: " . $current->format('d/m/Y'), ['bold' => true, 'size' => 16, 'name' => 'B Nazanin', 'rtl'=>true]);
+    
+            if (isset($tasksByWeek[$weekNumber])) {
+    
+                $rowNumber = 1; // شماره ردیف اول
+                $title = '';
+                foreach ($tasksByWeek[$weekNumber] as $task) {
+                    $startDate = Carbon::parse($task->start_date);
+                    $endDate = Carbon::parse($task->end_date);
+                
+                    $title .= $rowNumber . '. ' . $task->title . ' ';
+                
+                    $rowNumber++;
+                }
+                $cell->addText($title, ['bold' => true, 'size' => 12, 'name' => 'B Nazanin' , 'rtl'=>true]);
+                
+            } else {
+                $cell->addText("هیچ وظیفه‌ای برای این هفته موجود نیست", ['size' => 12, 'name' => 'B Nazanin']);
+            }
+    
+            // جلو بردن تاریخ به اندازه هفت روز
+            $current = $current->addDays(7);
+            $weekCount++;
+        }
+    
         // ذخیره فایل Word
         $wordFilename = base_path('public\\media\\Task\\Word\\' . $currentUser->username . '.docx');
         $phpWord->save($wordFilename);
     
-        return response()->json(['download_link' => url('media/Task/Word/' . $currentUser->username . '.docx'),'gregorianDateStart'=>$gregorianDateStart->format('Y-m-d 00:00:00'),'gregorianDateEnd'=>$gregorianDateEnd->format('Y-m-d 00:00:00')], 200);
+        return response()->json(['download_link' => url('media/Task/Word/' . $currentUser->username . '.docx')], 200);
     }
+    
 
     public function getTasksInProgressWord($request)
     {
@@ -555,17 +625,17 @@ class TaskController extends Controller
         $gregorianDateStart = Verta::parseFormat('Y/n/j', $firstDayOfWeek)->DateTime();
         $gregorianDateEnd = clone $gregorianDateStart;
         $gregorianDateEnd->modify('+6 days');
-    
+        $EmployeesUsername = [];
         if($isAdmin)
         {
-            $departmentUser = DepartmentUser::where('user_id',$currentUser->id)->first();
-            $employees = DepartmentUser::where('department_id',$departmentUser->department_id )->pluck('user_id'); 
-            $tasksInProgress = Task::whereIn('employee_id',$employees);
-            $todayTaskCount = Task::whereIn('employee_id',$employees)
-                ->where('status','InProgress')
-                ->whereDate('start_date', '<=', now()->toDateString())
-                ->whereDate('end_date', '>=', now()->toDateString())
-                ->count();
+            $DepartmentUser = DepartmentUser::where('user_id',$currentUser->id)->where('job_position','admin')->pluck('department_id'); 
+            $Employees = DepartmentUser::whereIn('department_id',$DepartmentUser);
+            $EmployeesUsername = clone $Employees;
+            $Employees = $Employees->pluck('user_id'); 
+            $EmployeesUsername = $Employees->pluck('username'); 
+            $tasksInProgress = Task::whereIn('employee_id',$Employees);
+            $DelayToDo = clone $tasksInProgress;
+            $DelayToDo = $DelayToDo->where('employee_id',$currentUser->id)->whereNull('done_at')->where('start_date', '<', Carbon::today())->get();
         }
         else
         {
@@ -573,8 +643,8 @@ class TaskController extends Controller
                 ->whereBetween('start_date', [$gregorianDateStart->format('Y-m-d 00:00:00'), $gregorianDateEnd->format('Y-m-d 00:00:00')]);  
                 
             $DelayToDo = Task::where('employee_id',$currentUser->id)->whereNull('done_at')->where('start_date', '<', Carbon::today())->get();
-                
-        }       
+        }    
+    
         $tasksInProgress = $tasksInProgress->with(['employee:id,username'])->get();
     
         $phpWord = new PhpWord();
@@ -590,16 +660,15 @@ class TaskController extends Controller
                     array('format' => 'decimal', 'text' => '%1.', 'left' => 360, 'hanging' => 360, 'tabPos' => 360),
                     array('format' => 'upperLetter', 'text' => '%2.', 'left' => 720, 'hanging' => 360, 'tabPos' => 720),
                 ),
-                'rtl' => true, // تنظیم جهت متن به راست به چپ
+                'rtl' => true,
                 'grammar' => false
             )
         );
     
-        $title = ['bold' => true, 'size' => 14, 'name' => 'B Nazanin', 'grammar' => false, 'grammar' => false];
-        $text = [ 'size' => 14, 'name' => 'B Nazanin', 'underline' => false, 'grammar' => false, 'grammar' => false];
+        $title = ['bold' => true, 'size' => 14, 'name' => 'B Nazanin', 'grammar' => false];
+        $text = [ 'size' => 14, 'name' => 'B Nazanin', 'underline' => false, 'grammar' => false];
         $subText = ['bold' => true, 'size' => 12, 'name' => 'B Nazanin', 'underline' => false, 'grammar' => false];
         
-        // تنظیمات CSS برای جهت متن به راست به چپ
         $style = ['alignment' => 'right', 'rtl' => true];
         
         foreach ($tasksInProgress as $task) {
@@ -609,15 +678,14 @@ class TaskController extends Controller
             }
         
             $startDate = Carbon::parse($task->start_date);
-            $endDate = Carbon::parse($task->end_date);
-            $duration = $endDate->diffInDays($startDate);
+            $endDate = Carbon::parse($task->done_at);
+            $duration = $this->getFormattedDuration($startDate, $endDate);
     
-            // افزودن متن با استفاده از CSS برای جهت متن
             $section->addListItem($task->title, 0, $title, 'multilevel', $style);
             $section->addText($task->description, $text, $style);
-            $section->addText('مدت زمان اجرا: ' . $duration . ' روز' . '         تاریخ برنامه‌ریزی شده: ' . $this->convertDate($task->start_date), $subText, $style);
+            $section->addText('مدت زمان اجرا: ' . $duration . '         تاریخ برنامه‌ریزی شده: ' . $this->convertDate($task->start_date), $subText, $style);
         }
-
+    
         foreach ($DelayToDo as $task) {
             $employee = "";
             if ($isAdmin) {
@@ -626,73 +694,108 @@ class TaskController extends Controller
         
             $startDate = Carbon::parse($task->start_date);
             $endDate = Carbon::parse($task->end_date);
-            $duration = $endDate->diffInDays($startDate);
+            $duration = $this->getFormattedDuration($startDate, $endDate);
     
-            // افزودن متن با استفاده از CSS برای جهت متن
             $section->addListItem($task->title, 0, $title, 'multilevel', $style);
             $section->addText($task->description, $text, $style);
-            $section->addText('مدت زمان اجرا: ' . $duration . ' روز' . '         تاریخ برنامه‌ریزی شده: ' . $this->convertDate($task->start_date), $subText, $style);
+            $section->addText('مدت زمان اجرا: ' . $duration . '         تاریخ برنامه‌ریزی شده: ' . $this->convertDate($task->start_date), $subText, $style);
         }        
         
-        // ذخیره فایل Word
         $wordFilename = base_path('public\\media\\Task\\Word\\' . $currentUser->username . '.docx');
         $phpWord->save($wordFilename);
     
         return response()->json(['download_link' => url('media/Task/Word/' . $currentUser->username . '.docx'),'gregorianDateStart'=>$gregorianDateStart->format('Y-m-d 00:00:00'),'gregorianDateEnd'=>$gregorianDateEnd->format('Y-m-d 00:00:00')], 200);
     }
     
-    
 
-    public function getTasksInProgress($request)
+    public function getTasksInProgress(Request $request)
     {
         if (!$this->isValidAction('getTasksInProgress', 'GET')) {
             return response()->json(['errors' => 'requestNotAllowed'], 422);
         }
-
+    
         $currentUser = auth()->user();
         $isAdmin = $this->isAdmin();
-        if($request->selectDateIn ?? false)
-        {
-            $today = new Verta($request->selectDateIn);
-
-        }
-        else
-            $today = Verta::now();
-
-        $firstDayOfWeek = $today;
-        $firstDayOfWeek->startWeek();
-        $firstDayOfWeek = $firstDayOfWeek->format('Y/m/d');
+        
+        $today = $request->selectDateIn ? new Verta($request->selectDateIn) : Verta::now();
+    
+        $firstDayOfWeek = $today->startWeek()->format('Y/m/d');
         $gregorianDate = Verta::parseFormat('Y/n/j', $firstDayOfWeek)->DateTime();
-        $gregorianDate = $gregorianDate->modify('+5 days');
-        if($isAdmin)
-        {
-            $DepartmentUser = DepartmentUser::where('user_id',$currentUser->id)->first();
-            $Employees = DepartmentUser::where('department_id',$DepartmentUser->department_id )->pluck('user_id'); 
-            $TasksInProgress = Task::whereIn('employee_id',$Employees);
-            $todayTask = Task::where([['status','like','InProgress']])
-            ->whereIn('employee_id',$Employees)
-            ->whereDate('start_date', '<=', now()->toDateString())
-            ->whereDate('end_date', '>=', now()->toDateString())
-            ->count();
+        $Holiday = $this->CheckHoliday($gregorianDate);
+        $gregorianDate = $gregorianDate->modify('+5 days')->format('Y-m-d');
+    
+        $EmployeesUsername = [];
+    
+        if ($isAdmin && !$request->myTask) {
+            $departmentIds = DepartmentUser::where('user_id', $currentUser->id)
+                ->where('job_position', 'admin')
+                ->pluck('department_id');
+    
+            $Employees = DepartmentUser::whereIn('department_id', $departmentIds)->pluck('user_id');
+    
+            $EmployeesUsername = User::whereIn('id', $Employees)->pluck('username');
+    
+            $TasksInProgress = Task::whereIn('employee_id', $Employees);
+            $todayTask = Task::where('status', 'InProgress')
+                ->whereIn('employee_id', $Employees)
+                ->whereDate('start_date', '<=', now()->toDateString())
+                ->whereDate('end_date', '>=', now()->toDateString())
+                ->count();
+        } else {
+            $TasksInProgress = Task::where('employee_id', $currentUser->id);
+            $todayTask = Task::where('employee_id', $currentUser->id)
+                ->where('status', 'InProgress')
+                ->whereDate('start_date', '<=', $gregorianDate)
+                ->whereDate('end_date', '>=', $gregorianDate)
+                ->count();
         }
-        else
-        {
-            $TasksInProgress = Task::where([['employee_id',$currentUser->id]]);
-            $todayTask = Task::where([['employee_id',$currentUser->id],['status','like','InProgress']])
-            ->whereDate('start_date', '>=', $gregorianDate)
-            ->whereDate('end_date', '<=', $gregorianDate)
-            ->count();            
+    
+        $gStartDate = Verta::parseFormat('Y/n/j', $firstDayOfWeek)->DateTime()->format('Y-m-d 00:00:00');
+        $gEndDate = Verta::parseFormat('Y/n/j', $firstDayOfWeek)->DateTime();
+        $gEndDate = $gEndDate->modify('+6 days')->format('Y-m-d 00:00:00');
+        $delayTasks = $TasksInProgress->clone()
+        ->where(function ($query) {
+            $query->where(function ($q) {
+                $q->where('status', 'InProgress')
+                  ->where('start_date', '<', Carbon::today());
+            })
+            ->orWhere(function ($q) {
+                $q->where('status', 'taskDone')
+                  ->whereRaw('DATE(start_date) < DATE(done_at)');
+            });
+        });
+        
+        $TasksInProgress = $TasksInProgress->whereBetween('start_date', [$gStartDate,$gEndDate]);
+
+
+    
+        // اعمال فیلتر بر اساس نام کاربری
+        if (($request->filterUsername ?? '') != '') {
+            $selectUser = User::where('username', $request->filterUsername)->first();
+            if ($selectUser) {
+                $delayTasks = $delayTasks->where('employee_id', $selectUser->id);
+                $TasksInProgress = $TasksInProgress->where('employee_id', $selectUser->id);
+            }
         }
-
-        $delayTasks = clone $TasksInProgress;
-        $delayTasks = $delayTasks->whereNull('done_at')
-                    ->where('start_date', '<', Carbon::today())
-                    ->with(['employee:id,username'])->get(); 
-
+        
+        $delayTasks = $delayTasks->with(['employee:id,username'])->get();
+     
         $TasksInProgress = $TasksInProgress->with(['employee:id,username'])->get();
-
-        return response()->json(['TasksInProgress'=>$TasksInProgress,'isAdmin'=>$isAdmin,'todayTask'=>$todayTask,'delayTasks'=>$delayTasks , 'firstDayOfWeek'=>$firstDayOfWeek , 'gregorianDate' => Verta::parseFormat('Y/n/j', $firstDayOfWeek)->DateTime()->format('Y/m/d')], 200);       
+    
+        return response()->json([
+            'EmployeesUsername' => $EmployeesUsername,
+            'currentUserId' => $currentUser->id,
+            'currentUserUsername' => $currentUser->username,
+            'TasksInProgress' => $TasksInProgress,
+            'Holiday' => $Holiday,
+            'isAdmin' => $isAdmin,
+            'todayTask' => $todayTask,
+            'delayTasks' => $delayTasks,
+            'firstDayOfWeek' => $firstDayOfWeek,
+            'gregorianDate' => Verta::parseFormat('Y/n/j', $firstDayOfWeek)->DateTime()->format('Y/m/d')
+        ], 200);
     }
+    
 
     public function saveNewTask($request)
     {
@@ -720,8 +823,33 @@ class TaskController extends Controller
                 $msg = "کاربر مسئول را به درستی وارد کنید";
                 return response()->json(['errors' => $msg], 422);
             }
-
             $User = $User->first();
+
+            $UserDepartman = DepartmentUser::where('user_id', $User->id)->get();
+            $isYourEmployee = false;
+            foreach ($UserDepartman as $value) {
+                $isYourEmployeeCount = DepartmentUser::where('user_id', $currentUser->id)
+                ->where('department_id',$value->department_id)
+                ->where('job_position','admin')
+                ->count();
+
+                if($isYourEmployeeCount == 0)
+                {
+                    $isYourEmployee = false;
+                }   
+                else
+                {
+                    $isYourEmployee = true;
+                    break;
+                }             
+            }
+
+            if(!$isYourEmployee)
+            {
+                $msg = "این کاربر در زیرمجموعه شما نیست.";
+                return response()->json(['errors' => $msg], 422);
+            }
+
             $lock = 1;
             $EmployeeId = $User->id;
         }

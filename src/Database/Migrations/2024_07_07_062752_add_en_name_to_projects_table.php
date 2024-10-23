@@ -13,7 +13,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('projects', function (Blueprint $table) {
-            $table->datetime('done_at')->nullable();
+            $table->string('en_name')->after('name')->nullable();
+            $table->string('icon')->after('en_name')->nullable();
         });
     }
 

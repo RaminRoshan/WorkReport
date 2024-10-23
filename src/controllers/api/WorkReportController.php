@@ -36,13 +36,14 @@ class WorkReportController extends Controller
         'getSelectItem',
         'getProjectForShow',
         'getProjectsForShow',
-        'getProjectItemsForShow'
+        'getProjectItemsForShow',
+        'editProject'
     ];
 
     protected $validMethods = [
         'GET' => ['getWorkList','getNewsletter','userStatistics','getStatistics','getSetting','getSelectItem','getProjectForShow','getProjectsForShow','getProjectItemsForShow'], // Added 'createAccessLevel' as a valid method-action pair
         'POST' => ['saveNewWorkReport','saveNewProject','saveNewSelectItem'], // Added 'createAccessLevel' as a valid action for POST method
-        'PUT' => ['updateWorkReport'],
+        'PUT' => ['updateWorkReport','editProject'],
         'DELETE' => ['deleteWorkReport','deleteProject']
     ];
 
@@ -177,12 +178,38 @@ class WorkReportController extends Controller
         $Projects = new Project;
         $Projects->department_id = $departmentId;
         $Projects->name = $request->project_name;
+        $Projects->en_name = $request->project_en_name;
+        $Projects->icon = $request->project_icon;
         $Projects->result_type = $request->project_result;
         $Projects->save();
 
         return response()->json([], 200); 
     }
 
+    public function editProject(Request $request)
+    {
+        if (!$this->isValidAction('editProject', 'PUT')) {
+            return response()->json(['errors' => 'requestNotAllowed'], 422);
+        }
+        
+        $validatedData = $request->validate([
+            'project_name' => 'required',
+            'project_result' => 'required',
+        ], [
+            'name.required' => 'عنوان پروژه الزامی است',
+            'project_result.required' => 'نوع خروجی پروژه الزامی است'
+        ]); 
+
+        $Projects = Project::where('id',$request->proId)->first();
+        $Projects->name = $request->project_name;
+        $Projects->en_name = $request->project_en_name;
+        $Projects->icon = $request->project_icon;
+        $Projects->result_type = $request->project_result;
+        $Projects->save();
+
+        return response()->json([], 200); 
+    }
+    
     public function getStatistics(Request $request)
     {
         $currentUser = auth()->user();
@@ -494,7 +521,8 @@ class WorkReportController extends Controller
         $p = $point;
         foreach ($bestSendNewspaper as $key => $value) {
             $username = $value->employee->username;
-            $rankedUsers['کاربر '.$username] = ($rankedUsers['کاربر '.$username] ?? 0) + (($p--)*1);
+            // $rankedUsers['کاربر '.$username] = ($rankedUsers['کاربر '.$username] ?? 0) + (($p--)*0);
+            $rankedUsers['کاربر '.$username] = 0;
         }  
         $p = $point;
         foreach ($bestProgramDevelop as $key => $value) {
@@ -504,7 +532,7 @@ class WorkReportController extends Controller
         $p = $point;
         foreach ($bestTranslate as $key => $value) {
             $username = $value->employee->username;
-            $rankedUsers['کاربر '.$username] = ($rankedUsers['کاربر '.$username] ?? 0) + (($p--)*0);
+            $rankedUsers['کاربر '.$username] = ($rankedUsers['کاربر '.$username] ?? 0) + (($p--)*1);
         }    
         $p = $point;
         foreach ($identification as $key => $value) {
@@ -613,7 +641,7 @@ class WorkReportController extends Controller
             'sendNews' => $sendNews,
             'sendNewsPercent' => ($allWorkReport != 0) ? round($sendNews / $allWorkReport * 100,2) : 0,
             'writeBulltan' => $writeBulltan,
-            'writeBulltanPercent' => ($allWorkReport != 0) ? round($writeBulltan / $allWorkReport * 100,2) : 0,
+            'writeBulltanPercent' => ($allWorkReport != 0) ? round($writeBulltan / $allWorkReport * 100,5) : 0,
             'sendNewspaper' => $sendNewspaper,
             'sendNewspaperPercent' => ($allWorkReport != 0) ? round($sendNewspaper / $allWorkReport * 100,2) : 0,
             'programDevelop' => $programDevelop,
@@ -634,594 +662,124 @@ class WorkReportController extends Controller
         if (!$this->isValidAction('userStatistics', 'GET')) {
             return response()->json(['errors' => 'requestNotAllowed'], 422);
         }
-
+    
         $userId = auth()->user()->id;
-
+    
         $now = new Verta();
-
+    
         $currentYear = $now->year;
         $currentMonth = $now->month;
         
         $firstDayOfMonth = Verta::parse("{$currentYear}-{$currentMonth}-01");
         $lastDayOfMonth = $firstDayOfMonth->addMonth()->subDay();
         
-        $startDate = $firstDayOfMonth->DateTime();
-        $endDate = $lastDayOfMonth->DateTime();
+        $startDateCurrentMonth = $firstDayOfMonth->DateTime();
+        $endDateCurrentMonth = $lastDayOfMonth->DateTime();
+    
+        $firstDayOfLastMonth = Verta::parse($firstDayOfMonth->subMonth()->format('Y-m-01'));
+        $lastDayOfLastMonth = Verta::parse($firstDayOfLastMonth->addMonth()->subDay()->format('Y-m-d'));
+    
+        $startDateLastMonth = $firstDayOfLastMonth->DateTime();
+        $endDateLastMonth = $lastDayOfLastMonth->DateTime();
         
-        $startDate = ($request->date_start == '') ? $startDate : Verta::parse($request->date_start)->DateTime();
-        $endDate = ($request->date_end == '') ? $endDate : Verta::parse($request->date_end)->DateTime();
-
-        $options = [
-            'conditions' => [
-                ['column' => 'employee_id', 'operator' => '=', 'value' => $userId],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],
-            'count' => true,
-        ];
-
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][2]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }
-
-        $userCount = $this->WorkReportRepository->Get($options);
-
-        $options = [
-            'conditions' => [
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],            
-            'count' => true,
-        ];
-
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][1]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }
-
-        $allCount = $this->WorkReportRepository->Get($options);
-
-        if($allCount == 0)
-            $projectPercent = 0;
-        else
-            $projectPercent = number_format($userCount * 100 / $allCount,2);
-
-        $options = [
-            'conditions' => [
-                ['column' => 'employee_id', 'operator' => '=', 'value' => $userId],
-                ['column' => 'project_task', 'operator' => 'like', 'value' => "سوژه‌یابی"],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],
-            'sum' => [
-                ['column' => 'outcome', 'alias' => 'sum_outcome'],
-            ],            
-            'get' => true,
-        ];
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }        
-        $findingPeople = $this->WorkReportRepository->Get($options)->first()->sum_outcome;
-
-        $options = [
-            'conditions' => [
-                ['column' => 'employee_id', 'operator' => '=', 'value' => $userId],
-                ['column' => 'project_task', 'operator' => 'like', 'value' => "شناسایی"],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],
-            'sum' => [
-                ['column' => 'outcome', 'alias' => 'sum_outcome'],
-            ],            
-            'get' => true,
-        ];
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }        
-        $identification = $this->WorkReportRepository->Get($options)->first()->sum_outcome;        
-
-        $options = [
-            'conditions' => [
-                ['column' => 'project_task', 'operator' => 'like', 'value' => "شناسایی"],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],
-            'sum' => [
-                ['column' => 'outcome', 'alias' => 'sum_outcome'],
-            ],            
-            'get' => true,
-        ];
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }        
-        $allidentification = $this->WorkReportRepository->Get($options)->first()->sum_outcome;
-
-        $options = [
-            'conditions' => [
-                ['column' => 'project_task', 'operator' => 'like', 'value' => "سوژه‌یابی"],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],
-            'sum' => [
-                ['column' => 'outcome', 'alias' => 'sum_outcome'],
-            ],            
-            'get' => true,
-        ];
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }        
-        $allFindingPeople = $this->WorkReportRepository->Get($options)->first()->sum_outcome;
-                
-        $options = [
-            'conditions' => [
-                ['column' => 'employee_id', 'operator' => '=', 'value' => $userId],
-                ['column' => 'project_task', 'operator' => 'like', 'value' => "سوژه‌یابی"],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],
-            'count' => true,
-        ];
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }        
-        $findingPeopleProject = $this->WorkReportRepository->Get($options);  
-        
-        $options = [
-            'conditions' => [
-                ['column' => 'project_task', 'operator' => 'like', 'value' => "سوژه‌یابی"],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],
-            'count' => true,
-        ];
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }        
-        $allFindingPeopleProject = $this->WorkReportRepository->Get($options);  
-
-
-        $options = [
-            'conditions' => [
-                ['column' => 'employee_id', 'operator' => '=', 'value' => $userId],
-                ['column' => 'project_task', 'operator' => 'like', 'value' => "مستندسازی"],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],
-            'sum' => [
-                ['column' => 'outcome', 'alias' => 'sum_outcome'],
-            ],            
-            'get' => true,
-        ];
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }        
-        $Documentation = $this->WorkReportRepository->Get($options)->first()->sum_outcome;      
-
-        $options = [
-            'conditions' => [
-                ['column' => 'project_task', 'operator' => 'like', 'value' => "مستندسازی"],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],
-            'sum' => [
-                ['column' => 'outcome', 'alias' => 'sum_outcome'],
-            ],            
-            'get' => true,
-        ];
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }        
-        $allDocumentation = $this->WorkReportRepository->Get($options)->first()->sum_outcome; 
-
-        $options = [
-            'conditions' => [
-                ['column' => 'employee_id', 'operator' => '=', 'value' => $userId],
-                ['column' => 'project_task', 'operator' => 'like', 'value' => "مستندسازی"],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],          
-            'count' => true,
-        ];
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }        
-        $DocumentationProject = $this->WorkReportRepository->Get($options);
-
-        $options = [
-            'conditions' => [
-                ['column' => 'project_task', 'operator' => 'like', 'value' => "مستندسازی"],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],          
-            'count' => true,
-        ];
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }        
-        $allDocumentationProject = $this->WorkReportRepository->Get($options);
-
-        $options = [
-            'conditions' => [
-                ['column' => 'employee_id', 'operator' => '=', 'value' => $userId],
-                ['column' => 'project_task', 'operator' => 'like', 'value' => "ارسال خبرنامه"],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],          
-            'count' => true,
-        ];
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }        
-        $writeBulltan = $this->WorkReportRepository->Get($options);  
-
-        $options = [
-            'conditions' => [
-                ['column' => 'project_task', 'operator' => 'like', 'value' => "ارسال خبرنامه"],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],          
-            'count' => true,
-        ];
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }        
-        $allwriteBulltan = $this->WorkReportRepository->Get($options);
-
-        $options = [
-            'conditions' => [
-                ['column' => 'employee_id', 'operator' => '=', 'value' => $userId],
-                ['column' => 'project_task', 'operator' => 'like', 'value' => "ارسال خبر"],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],
-            'sum' => [
-                ['column' => 'outcome', 'alias' => 'sum_outcome'],
-            ],            
-            'get' => true,
-        ];
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }        
-        $sendNews = $this->WorkReportRepository->Get($options)->first()->sum_outcome; 
-
-        $options = [
-            'conditions' => [
-                ['column' => 'project_task', 'operator' => 'like', 'value' => "ارسال خبر"],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],
-            'sum' => [
-                ['column' => 'outcome', 'alias' => 'sum_outcome'],
-            ],            
-            'get' => true,
-        ];
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }        
-        $allsendNews = $this->WorkReportRepository->Get($options)->first()->sum_outcome;        
-
-        $options = [
-            'conditions' => [
-                ['column' => 'employee_id', 'operator' => '=', 'value' => $userId],
-                ['column' => 'project_task', 'operator' => 'like', 'value' => "ارسال بصر"],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],
-            'sum' => [
-                ['column' => 'outcome', 'alias' => 'sum_outcome'],
-            ],            
-            'get' => true,
-        ];
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }        
-        $sendNewspaper = $this->WorkReportRepository->Get($options)->first()->sum_outcome;  
-
-        $options = [
-            'conditions' => [
-                ['column' => 'project_task', 'operator' => 'like', 'value' => "ارسال بصر"],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],
-            'sum' => [
-                ['column' => 'outcome', 'alias' => 'sum_outcome'],
-            ],            
-            'get' => true,
-        ];
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }        
-        $allsendNewspaper = $this->WorkReportRepository->Get($options)->first()->sum_outcome;
-
-        $options = [
-            'conditions' => [
-                ['column' => 'employee_id', 'operator' => '=', 'value' => $userId],
-                ['column' => 'project_task', 'operator' => 'like', 'value' => "برنامه نویسی"],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],
-            'count' => true,
-        ];
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }        
-        $programDevelop = $this->WorkReportRepository->Get($options); 
-
-        $options = [
-            'conditions' => [
-                ['column' => 'project_task', 'operator' => 'like', 'value' => "برنامه نویسی"],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],
-            'count' => true,
-        ];
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }        
-        $allprogramDevelop = $this->WorkReportRepository->Get($options);        
-
-        $options = [
-            'conditions' => [
-                ['column' => 'employee_id', 'operator' => '=', 'value' => $userId],
-                ['column' => 'project_task', 'operator' => 'like', 'value' => "آموزش"],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],
-            'count' => true,
-        ];
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }        
-        $teaching = $this->WorkReportRepository->Get($options); 
-
-        $options = [
-            'conditions' => [
-                ['column' => 'project_task', 'operator' => 'like', 'value' => "آموزش"],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],
-            'count' => true,
-        ];
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }        
-        $allteaching = $this->WorkReportRepository->Get($options);
-
-        $options = [
-            'conditions' => [
-                ['column' => 'employee_id', 'operator' => '=', 'value' => $userId],
-                ['column' => 'project_task', 'operator' => 'like', 'value' => "سایر"],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],
-            'count' => true,
-        ];
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }        
-        $other = $this->WorkReportRepository->Get($options); 
-        
-        $options = [
-            'conditions' => [
-                ['column' => 'project_task', 'operator' => 'like', 'value' => "سایر"],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],
-            'count' => true,
-        ];
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }        
-        $allother = $this->WorkReportRepository->Get($options); 
-
-        $options = [
-            'conditions' => [
-                ['column' => 'employee_id', 'operator' => '=', 'value' => $userId],
-                ['column' => 'project_task', 'operator' => 'like', 'value' => "ترجمه"],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],
-            'count' => true,
-        ];
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }        
-        $translate = $this->WorkReportRepository->Get($options); 
-
-        $options = [
-            'conditions' => [
-                ['column' => 'project_task', 'operator' => 'like', 'value' => "ترجمه"],
-                [
-                    'column' => 'date',
-                    'operator' => 'between',
-                    'value' => [$startDate, $endDate],
-                ],
-            ],
-            'count' => true,
-        ];
-        if($request->project_task_search != '')
-        {
-            $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
-        }        
-        $alltranslate = $this->WorkReportRepository->Get($options); 
-
-        $coefficients = [
-            'سوژه‌یابی' => $findingPeopleProject,
-            'مستندسازی' => $DocumentationProject,
-            'ارسال خبرنامه' => $writeBulltan,
-            'ارسال خبر' => $sendNews,
-            'ارسال بصر' => $sendNewspaper,
-            'برنامه نویسی' => $programDevelop,
-            'آموزش' => $teaching,
-            'سایر' => $other,
-            'ترجمه' => $translate,
-        ];
-        
-        $workPoints = WorkPoint::all();
-
-        $totalScore = 0;
-        
-        foreach ($workPoints as $item) {
-            switch ($item->name) {
-                case 'سوژه‌یابی':
-                    $totalScore = $totalScore + ($item->point * $coefficients['سوژه‌یابی']);
-                    break;
-                case 'مستندسازی':
-                    $totalScore = $totalScore + ($item->point * $coefficients['مستندسازی']);
-                    break;
-                case 'ارسال خبرنامه':
-                    $totalScore = $totalScore + ($item->point * $coefficients['ارسال خبرنامه']);
-                    break;                                        
-                case 'ارسال خبر':
-                    $totalScore = $totalScore + ($item->point * $coefficients['ارسال خبر']);
-                    break;
-                case 'ارسال بصر':
-                    $totalScore = $totalScore + ($item->point * $coefficients['ارسال بصر']);
-                    break;                                        
-                case 'برنامه نویسی':
-                    $totalScore = $totalScore + ($item->point * $coefficients['برنامه نویسی']);
-                    break;                    
-                case 'آموزش':
-                    $totalScore = $totalScore + ($item->point * $coefficients['آموزش']);
-                    break; 
-                case 'ترجمه':
-                    $totalScore = $totalScore + ($item->point * $coefficients['ترجمه']);
-                    break;                                          
-                case 'سایر':
-                    $totalScore = $totalScore + ($item->point * $coefficients['سایر']);
-                    break;                    
-                
-            }
-        }
-
+        $startDateCurrentMonth = ($request->date_start == '') ? $startDateCurrentMonth : Verta::parse($request->date_start)->DateTime();
+        $endDateCurrentMonth = ($request->date_end == '') ? $endDateCurrentMonth : Verta::parse($request->date_end)->DateTime();
+    
+        // محاسبه و نمایش آمار برای ماه جاری
+        $currentMonthStats = $this->calculateStats($request,$userId, $startDateCurrentMonth, $endDateCurrentMonth, $request->project_task_search);
+    
+        // محاسبه و نمایش آمار برای ماه قبل
+        $lastMonthStats = $this->calculateStats($request,$userId, $startDateLastMonth, $endDateLastMonth, $request->project_task_search);
+    
         return response()->json([
-            // 'allCount' => $allCount, 
-            'userCount' => $userCount , 
-            'projectPercent'=>$projectPercent, 
-            'findingPeople'=>$findingPeople,
-            'Documentation'=>$Documentation,
-            'writeBulltan'=>$writeBulltan,
-            'sendNews'=>$sendNews,
-            'sendNewspaper'=>$sendNewspaper,
-            'programDevelop'=>$programDevelop,
-            'teaching'=>$teaching,
-            'other'=>$other,
-            'totalScore'=>$totalScore,
-            'translate'=>$translate,
-            'identification'=>$identification,
-            // 'allfindingPeople'=>$allFindingPeople,
-            // 'allDocumentation'=>$allDocumentation,
-            // 'allwriteBulltan'=>$allwriteBulltan,
-            // 'allsendNews'=>$allsendNews,
-            // 'allsendNewspaper'=>$allsendNewspaper,
-            // 'allprogramDevelop'=>$allprogramDevelop,
-            // 'allteaching'=>$allteaching,
-            // 'allother'=>$allother,
-            // 'alltranslate'=>$alltranslate,
-            // 'allidentification'=>$allidentification,
-                                  
+            'currentMonth' => $currentMonthStats,
+            'lastMonth' => $lastMonthStats,
         ]);
     }
+    
+    private function calculateStats($request,$userId, $startDate, $endDate, $projectTaskSearch)
+    {
+        $commonConditions = [
+            ['column' => 'date', 'operator' => 'between', 'value' => [$startDate, $endDate]],
+        ];
+    
+        if ($request->project_task_search) {
+            $commonConditions[] = ['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
+        }
+    
+        $userTaskConditions = array_merge(
+            [['column' => 'employee_id', 'operator' => '=', 'value' => $userId]],
+            $commonConditions
+        );
+    
+        $userCount = $this->WorkReportRepository->Get([
+            'conditions' => $userTaskConditions,
+            'count' => true,
+        ]);
+    
+        $allCount = $this->WorkReportRepository->Get([
+            'conditions' => $commonConditions,
+            'count' => true,
+        ]);
+    
+        $projectPercent = $allCount ? number_format($userCount * 100 / $allCount, 2) : 0;
+    
+        $DepartmentUser = DepartmentUser::where('user_id',$userId)->first();
+        $taskTypes = Project::where([['department_id',$DepartmentUser->department_id],['pid'.null]])->orderBy('id','desc')->get();
+        $results = [];
+        $results['userCount'] = ['name'=>'فعالیت','count'=>$userCount,'icon'=>'bx bx-hard-hat fs-4'];
 
+        foreach ($taskTypes as $item) {
+            if($item->result_type == 'int')
+            {
+                $options = [
+                    'conditions' => [
+                        ['column' => 'employee_id', 'operator' => '=', 'value' => $userId],
+                        ['column' => 'project_task', 'operator' => 'like', 'value' => $item->name],
+                        [
+                            'column' => 'date',
+                            'operator' => 'between',
+                            'value' => [$startDate, $endDate],
+                        ],
+                    ],
+                    'sum' => [
+                        ['column' => 'outcome', 'alias' => 'sum_outcome'],
+                    ],            
+                    'get' => true,
+                ];
+                if($request->project_task_search != '')
+                {
+                    $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
+                }        
+                $itemCount = $this->WorkReportRepository->Get($options)->first()->sum_outcome;
+                $results[$item->en_name] = ['name'=>$item->name,'count'=>$itemCount,'icon'=>$item->icon];
+            }
+            else
+            {
+                $options = [
+                    'conditions' => [
+                        ['column' => 'employee_id', 'operator' => '=', 'value' => $userId],
+                        ['column' => 'project_task', 'operator' => 'like', 'value' => $item->name],
+                        [
+                            'column' => 'date',
+                            'operator' => 'between',
+                            'value' => [$startDate, $endDate],
+                        ],
+                    ],          
+                    'count' => true,
+                ];
+                if($request->project_task_search != '')
+                {
+                    $options['conditions'][4]=['column' => 'project_task', 'operator' => 'like', 'value' => $request->project_task_search];
+                }        
+                $itemCount = $this->WorkReportRepository->Get($options);   
+                $results[$item->en_name] = ['name'=>$item->name,'count'=>$itemCount,'icon'=>$item->icon];
+            }
+        }
+        
+        return $results;
+    }
+    
     public function updateWorkReport(Request $request)
     {
         if (!$this->isValidAction('updateWorkReport', 'PUT')) {

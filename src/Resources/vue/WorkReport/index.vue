@@ -27,137 +27,24 @@
     </nav>
     <br>
     <div class="row">
-        <div class="col-6 col-md-2 col-lg-2 mb-2">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <div class="avatar mx-auto mb-2">
-                        <span class="avatar-initial rounded-circle bg-label-success"><i class="bx bx-hard-hat fs-4"></i></span>
+        <template v-for="(item, key) in currentMonth" :key="key">
+            <div class="col-6 col-md-2 col-lg-2 mb-2" v-if="item.count > 0">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <div class="avatar mx-auto mb-2">
+                            <span class="avatar-initial rounded-circle bg-label-info">
+                                <i :class="item.icon"></i>
+                            </span>
+                        </div>
+                        <span class="d-block text-nowrap pt-1">{{ item.name }}</span>
+                        <h2 class="mb-n3">
+                            {{ item.count }}
+                            <i :title="lastMonth[key]?.count" :class="(lastMonth[key]?.count > item.count) ? 'fa fa-arrow-circle-down bg-label-danger' : 'fa fa-arrow-circle-up bg-label-success'" style="font-size:20px"></i> 
+                        </h2>
                     </div>
-                    <span class="d-block text-nowrap pt-1">فعالیت</span>
-                    <h2 class="mb-n3">{{ userCount }}</h2>
                 </div>
             </div>
-        </div>
-  
-        <div class="col-6 col-md-2 col-lg-2 mb-2" v-if="findingPeople || findingPeople>0">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <div class="avatar mx-auto mb-2">
-                        <span class="avatar-initial rounded-circle bg-label-success"><i class="fa fa-users fs-4"></i></span>
-                    </div>
-                    <span class="d-block text-nowrap pt-1">سوژه‌یابی</span>
-                    <h2 class="mb-n3">{{ findingPeople }}</h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-md-2 col-lg-2 mb-2" v-if="identification || identification>0">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <div class="avatar mx-auto mb-2">
-                        <span class="avatar-initial rounded-circle bg-label-success"><i class="bx bx-file fs-4"></i></span>
-                    </div>
-                    <span class="d-block text-nowrap pt-1">شناسایی</span>
-                    <h2 class="mb-n3">{{ identification }}</h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-md-2 col-lg-2 mb-2" v-if="Documentation || Documentation>0">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <div class="avatar mx-auto mb-2">
-                        <span class="avatar-initial rounded-circle bg-label-success"><i class="bx bx-file fs-4"></i></span>
-                    </div>
-                    <span class="d-block text-nowrap pt-1">مستندسازی</span>
-                    <h2 class="mb-n3">{{ Documentation }}</h2>
-                </div>
-            </div>
-        </div>        
-      
-        <div class="col-6 col-md-2 col-lg-2 mb-2" v-if="writeBulltan || writeBulltan>0">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <div class="avatar mx-auto mb-2">
-                        <span class="avatar-initial rounded-circle bg-label-success"><i class="fa fa-bars fs-4"></i></span>
-                    </div>
-                    <span class="d-block text-nowrap pt-1">ارسال خبرنامه</span>
-                    <h2 class="mb-n3">{{ writeBulltan }}</h2>
-                </div>
-            </div>
-        </div> 
-
-        <div class="col-6 col-md-2 col-lg-2 mb-2" v-if="sendNews || sendNews>0">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <div class="avatar mx-auto mb-2">
-                        <span class="avatar-initial rounded-circle bg-label-success"><i class="fa fa-envelope fs-4"></i></span>
-                    </div>
-                    <span class="d-block text-nowrap pt-1">ارسال خبر</span>
-                    <h2 class="mb-n3">{{ sendNews }}</h2>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-6 col-md-2 col-lg-2 mb-2" v-if="sendNewspaper || sendNewspaper>0">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <div class="avatar mx-auto mb-2">
-                        <span class="avatar-initial rounded-circle bg-label-success"><i class="fa fa-newspaper fs-4"></i></span>
-                    </div>
-                    <span class="d-block text-nowrap pt-1">ارسال بصر</span>
-                    <h2 class="mb-n3">{{ sendNewspaper }}</h2>
-                </div>
-            </div>
-        </div>
-  
-        <div class="col-6 col-md-2 col-lg-2 mb-2" v-if="programDevelop || programDevelop>0">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <div class="avatar mx-auto mb-2">
-                        <span class="avatar-initial rounded-circle bg-label-success"><i class="fa fa-keyboard fs-4"></i></span>
-                    </div>
-                    <span class="d-block text-nowrap pt-1">برنامه نویسی</span>
-                    <h2 class="mb-n3">{{ programDevelop }}</h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-md-2 col-lg-2 mb-2" v-if="teaching || teaching>0">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <div class="avatar mx-auto mb-2">
-                        <span class="avatar-initial rounded-circle bg-label-success"><i class="fa fa-graduation-cap fs-4"></i></span>
-                    </div>
-                    <span class="d-block text-nowrap pt-1">آموزش</span>
-                    <h2 class="mb-n3">{{ teaching }}</h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-md-2 col-lg-2 mb-2" v-if="translate || translate>0">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <div class="avatar mx-auto mb-2">
-                        <span class="avatar-initial rounded-circle bg-label-success"><i class="fa fa-language  fs-4"></i></span>
-                    </div>
-                    <span class="d-block text-nowrap pt-1">ترجمه</span>
-                    <h2 class="mb-n3">{{ translate }}</h2>
-                </div>
-            </div>
-        </div> 
-  
-        <div class="col-6 col-md-2 col-lg-2 mb-2" v-if="other || other>0">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <div class="avatar mx-auto mb-2">
-                        <span class="avatar-initial rounded-circle bg-label-success"><i class="bx bx-purchase-tag fs-4"></i></span>
-                    </div>
-                    <span class="d-block text-nowrap pt-1">سایر</span>
-                    <h2 class="mb-n3">{{ other }}</h2>
-                </div>
-            </div>
-        </div> 
+        </template>
     </div>
     <div class="row">
         <div class="col-sm-12">
@@ -232,8 +119,9 @@
                             </span>
                             <div class="timeline-event card p-0" data-aos="fade-right">
                                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
-                                    <h6 class="card-title mb-0 mt-n1">{{item.project_task}} <small v-if="item.outcome">({{item.outcome}})</small></h6>
+                                    <h6 class="card-title mb-0 mt-n1">{{item.project_task}}</h6>
                                     <div class="meta primary-font mt-n1">
+                                        <span class="badge rounded-pill bg-label-info">{{item.outcome}}</span>
                                         <span class="badge rounded-pill bg-label-primary">{{item.start_time}}</span>
                                         <span class="badge rounded-pill bg-label-success">{{item.end_time}}</span>
                                     </div>
@@ -286,7 +174,7 @@
     </div>
 
     <div class="modal fade" id="workReportSetting" tabindex="-1" aria-labelledby="workReportSettingLabel" style="display: none;" aria-hidden="false">
-        <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-dialog modal-xl" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="workReportSettingLabel">تنظیمات گزارش کار</h5>
@@ -304,10 +192,16 @@
                     <div class="tab-content" id="myTabContent">
                         <div class="tab-pane fade show active" id="project_tab" role="tabpanel" aria-labelledby="select_tab">
                             <div class="row">
-                                <div class="col-sm-6">
+                                <div class="col-sm-3">
                                     <input class="form-control" v-model="project_name" placeholder="عنوان پروژه را وارد کنید">
                                 </div>
-                                <div class="col-sm-4">
+                                <div class="col-sm-3">
+                                    <input class="form-control" v-model="project_en_name" placeholder="عنوان انگلیسی پروژه را وارد کنید">
+                                </div>    
+                                <div class="col-sm-3">
+                                    <input class="form-control" v-model="project_icon" placeholder="متن آیکن پروژه را وارد کنید">
+                                </div>                                                              
+                                <div class="col-sm-2">
                                     <select class="form-control" v-model="project_result">
                                         <option value="notUsed">بدون خروجی</option>
                                         <option value="int">عددی</option>
@@ -315,24 +209,35 @@
                                         <option value="select">انتخابی</option>
                                     </select>
                                 </div>
-                                <div class="col-sm-2">
+                                <div class="col-sm-1">
                                     <button class="btn btn-primary" @click="saveNewProject()"><i class="fa fa-save"></i></button>
                                 </div>
                                 <div class="col-sm-12">
                                     <table class="table table-striped table-hover table-sm">
                                         <thead>
                                             <tr>
-                                                <th scope="col">عنوان پروژه</th>
-                                                <th scope="col">نوع نتیجه</th>
-                                                <th scope="col">ویرایش</th>
-                                                <th scope="col">حذف</th>
+                                                <th scope="col" class="text-center">عنوان فارسی</th>
+                                                <th scope="col" class="text-center">عنوان انگلیسی</th>
+                                                <th scope="col" class="text-center">آیکن</th>
+                                                <th scope="col" class="text-center">نوع نتیجه</th>
+                                                <th scope="col" class="text-center">ویرایش</th>
+                                                <th scope="col" class="text-center">حذف</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr v-for="item in projects">
-                                                <th scope="row">{{item.name}}</th>
-                                                <td>{{translateText(item.result_type)}}</td>
-                                                <td></td>
+                                                <th scope="row"><input class="form-control" v-model="item.name"></th>
+                                                <th scope="row"><input class="form-control" v-model="item.en_name"></th>
+                                                <th scope="row"><input class="form-control" v-model="item.icon"></th>
+                                                <td>
+                                                    <select class="form-control" v-model="item.result_type">
+                                                        <option value="notUsed">بدون خروجی</option>
+                                                        <option value="int">عددی</option>
+                                                        <option value="text">متنی</option>
+                                                        <option value="select">انتخابی</option>
+                                                    </select>
+                                                </td>
+                                                <td><button class="btn btn-info" @click="editProject(item)"><i class="fa fa-edit"></i></button></td>
                                                 <td><button class="btn btn-danger" @click="deleteProject(item.id)"><i class="fa fa-trash"></i></button></td>
                                             </tr>
                                         </tbody>
@@ -581,6 +486,8 @@ export default {
             selectedItem:[],
             subSelectItem:[],
             project_name:'',
+            project_en_name:'',
+            project_icon:'',
             project_result:'notUsed',
             result_name:'',
             select_item_id:'',
@@ -589,6 +496,8 @@ export default {
             projectsShow:[],
             projectShow:[],
             projectItemShow:[],
+            currentMonth:[],
+            lastMonth:[],
         }
     },
     components: {  },  
@@ -664,12 +573,14 @@ export default {
             }).catch(error => {
                 this.checkError(error);
             });
-        },        
+        }, 
         saveNewProject() {
             axios.get(this.getAppUrl() + 'sanctum/getToken').then(response => {
                 
                 const token = response.data.token;
                 const project_name = this.project_name
+                const project_en_name = this.project_en_name
+                const project_icon = this.project_icon
                 const project_result = this.project_result;
                 const action = 'saveNewProject'; 
 
@@ -677,13 +588,45 @@ export default {
                     method: 'POST',
                     url: this.getAppUrl() + 'api/user/WorkReport',
                     headers: {'Authorization': `Bearer ${token}`},
-                    data: { project_name, project_result , action }
+                    data: { project_name,project_en_name,project_icon,project_result , action }
                 }).then(response => {
                     this.project_name = ""
                     this.project_result = "notUsed";
                     Swal.fire(
                         'اضافه شد!',
                         'پروژه با موفقیت اضافه شد',
+                        'success'
+                    );   
+                    this.getSetting();   
+                }).catch(error => {
+                    this.checkError(error);
+                });        
+            }).catch(error => {
+                this.checkError(error);
+            });
+        },        
+        editProject(item) {
+            axios.get(this.getAppUrl() + 'sanctum/getToken').then(response => {
+                
+                const token = response.data.token;
+                const project_name = item.name
+                const project_en_name = item.en_name
+                const project_icon = item.icon
+                const proId = item.id;
+                const project_result = item.result_type;
+                const action = 'editProject'; 
+
+                axios.request({
+                    method: 'PUT',
+                    url: this.getAppUrl() + 'api/user/WorkReport',
+                    headers: {'Authorization': `Bearer ${token}`},
+                    data: { project_name,project_en_name,project_icon,proId, project_result , action }
+                }).then(response => {
+                    this.project_name = ""
+                    this.project_result = "notUsed";
+                    Swal.fire(
+                        'ویرایش شد!',
+                        'پروژه با موفقیت ویرایش شد',
                         'success'
                     );   
                     this.getSetting();   
@@ -812,30 +755,8 @@ export default {
                     url: this.getAppUrl() + 'api/user/WorkReport?action=userStatistics&date_start='+dateStart+'&date_end='+dateEnd+'&project_task_search='+project_task_search,
                     headers: {'Authorization': `Bearer ${token}`}
                 }).then(response => {
-                    this.allCount = response.data.allCount;                
-                    this.userCount = response.data.userCount; 
-                    this.projectPercent = response.data.projectPercent              
-                    this.findingPeople = response.data.findingPeople              
-                    this.Documentation = response.data.Documentation  
-                    this.writeBulltan = response.data.writeBulltan  
-                    this.sendNews = response.data.sendNews  
-                    this.sendNewspaper = response.data.sendNewspaper  
-                    this.programDevelop = response.data.programDevelop  
-                    this.teaching = response.data.teaching  
-                    this.other = response.data.other
-                    this.totalScore = response.data.totalScore
-                    this.translate = response.data.translate
-                    this.allfindingPeople = response.data.allfindingPeople              
-                    this.allDocumentation = response.data.allDocumentation  
-                    this.allwriteBulltan = response.data.allwriteBulltan  
-                    this.allsendNews = response.data.allsendNews  
-                    this.allsendNewspaper = response.data.allsendNewspaper  
-                    this.allprogramDevelop = response.data.allprogramDevelop  
-                    this.allteaching = response.data.allteaching  
-                    this.allother = response.data.allother
-                    this.alltranslate = response.data.alltranslate  
-                    this.identification = response.data.identification                  
-                    this.allidentification = response.data.allidentification                  
+                    this.currentMonth = response.data.currentMonth
+                    this.lastMonth = response.data.lastMonth
                 }).catch(error => {
                     this.checkError(error);
                 });
